@@ -87,8 +87,14 @@ export const mockApplicants = [
   },
 ];
 
-export const departments = ['Finance', 'Admin', 'Engineering', 'Health', 'Public Works', 'Education'];
-export const designations = ['Clerk', 'Officer', 'Engineer', 'Supervisor', 'Manager', 'Director'];
+export const departments = [
+  // "Public Works",
+  // "Health",
+  // "Education",
+  "Finance",
+  // "Sanitation",
+];
+export const designations = ["Clerk", "Officer", "Supervisor", "Junior Engineer"];
 export const categories = ['A', 'B', 'C', 'D'];
 export const castes = ['General', 'OBC', 'SC', 'ST'];
 export const accountTypes = ['Savings', 'Current'];
