@@ -96,9 +96,10 @@ export const departments = [
 ];
 
 export const familyMember = [
-  "Father Name",
-  "Husband Name",
-  "Dependent Name",
+  "Self",
+  "Father",
+  "Mother",
+  "Spouse",
 ]
 export const designations = ["Clerk", "Officer", "Supervisor", "Junior Engineer"];
 export const categories = ['A', 'B', 'C', 'D'];
