@@ -319,8 +319,8 @@ const AddApplicant = () => {
         if (v !== null && v !== undefined) fd.append(k, v);
       });
       const res = await fetch(
-        // "https://pension-portal-backend.onrender.com/api/pensioners",
-        "http://localhost:5000/api/pensioners",
+        "https://pension-portal-backend.onrender.com/api/pensioners",
+        // "http://localhost:5000/api/pensioners",
         { method: "POST", body: fd },
       );
       const data = await res.json();
