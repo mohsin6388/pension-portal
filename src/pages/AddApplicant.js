@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import Navbar from "../components/layout/Navbar";
 import ActionBar from "../components/layout/ActionBar";
 import Breadcrumb from "../components/ui/Breadcrumb";
+import { API } from "../data/api";
 
 import {
   InputField,
@@ -13,6 +13,11 @@ import {
 } from "../components/forms/FormField";
 import FormSection from "../components/ui/FormSection";
 
+import {Camera,
+  PenTool,
+  FileText,
+  FileBadge,} from "lucide-react"
+
 import {
   familyMember,
   departments,
@@ -20,6 +25,7 @@ import {
   categories,
   castes,
   accountTypes,
+  banks,
 } from "../data/mockData";
 
 // ─── Initial State ────────────────────────────────────────────────────────────
@@ -31,7 +37,7 @@ const initialForm = {
   relation: "",
   relationName:"",
   // familyName: "",
-  department: "",
+  department: "Finance",
   designation: "",
   aadhaar: "",
   pan: "",
@@ -40,12 +46,12 @@ const initialForm = {
   retirementDate: "",
   dod: "",
   gender: "",
-  empCategory: "",
+  // empCategory: "",
   gradePay: "",
   lastSalary: "",
   caste: "",
   categoryType: "Self",
-  categoryPct: "100",
+  // categoryPct: "100",
   notionalIncrement: "Y",
   acp: "Y",
   pfms: "",
@@ -145,6 +151,7 @@ const AddApplicant = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [panError, setPanError] = useState("");
 
   // ── Handle Change ────────────────────────────────────────────────────────
   const handleChange = (e) => {
@@ -159,16 +166,75 @@ const AddApplicant = () => {
     if (name === "pinCode") {
       if (!/^\d*$/.test(value) || value.length > 6) return;
     }
+
     if (name === "pan") {
       const upper = value.toUpperCase();
+
       if (upper.length > 10) return;
-      setForm((p) => ({ ...p, [name]: upper }));
-      if (errors[name]) setErrors((p) => ({ ...p, [name]: "" }));
+
+      setForm((p) => ({
+        ...p,
+        [name]: upper,
+      }));
+
+      // Realtime PAN validation
+      if (upper.length === 10 && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(upper)) {
+        setPanError("Invalid PAN format");
+      } else {
+        setPanError("");
+      }
+
       return;
     }
 
+    if (name === "ifsc") {
+      const upper = value.toUpperCase();
+
+      if (upper.length > 11) return;
+
+      setForm((p) => ({
+        ...p,
+        [name]: upper,
+      }));
+
+      return;
+    }
+
+    if (name === "acNo") {
+      if (!/^\d*$/.test(value) || value.length > 18) return;
+    }
+
+    if (name === "micr") {
+      if (!/^\d*$/.test(value) || value.length > 9) return;
+    }
+
+    if (name === "pfms") {
+      const upper = value.toUpperCase();
+
+      // max 25 chars
+      if (upper.length > 25) return;
+
+      // only alphanumeric
+      if (!/^[A-Z0-9]*$/.test(upper)) return;
+
+      setForm((p) => ({
+        ...p,
+        [name]: upper,
+      }));
+
+      return;
+    }
+
+
     setForm((p) => ({ ...p, [name]: files ? files[0] : value }));
-    if (errors[name]) setErrors((p) => ({ ...p, [name]: "" }));
+    // if (errors[name]) setErrors((p) => ({ ...p, [name]: "" }));
+    if (errors[name]) {
+      setErrors((prev) => {
+        const updated = { ...prev };
+        delete updated[name];
+        return updated;
+      });
+    }
   };
 
   // ── Per-step validation ──────────────────────────────────────────────────
@@ -186,9 +252,9 @@ const AddApplicant = () => {
       }
 
       // PAN Validation
-      if (form.pan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(form.pan)) {
-        errs.pan = "Invalid PAN format";
-      }
+      // if (form.pan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(form.pan)) {
+      //   errs.pan = "Invalid PAN format";
+      // }
 
       // Mobile Validation
       if (form.mobile && !/^\d{10}$/.test(form.mobile)) {
@@ -208,14 +274,22 @@ const AddApplicant = () => {
 
     if (s === 2) {
       [
-        "department",
         "designation",
         "retirementDate",
-        "empCategory",
+        "pfms",
         "gradePay",
       ].forEach((f) => {
         if (!form[f]) errs[f] = "Required";
       });
+
+
+      // PFMS Validation
+
+      // if (form.pfms && !/^[A-Z0-9]{6,25}$/.test(form.pfms)) {
+      //   errs.pfms = "Invalid PFMS ID";
+      // }
+
+    
     }
 
     if (s === 3) {
@@ -227,6 +301,16 @@ const AddApplicant = () => {
       if (form.ifsc && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(form.ifsc)) {
         errs.ifsc = "Invalid IFSC code";
       }
+
+      // Account Number Vaidation
+      if (form.acNo && !/^\d{9,18}$/.test(form.acNo)) {
+        errs.acNo = "Account number must be 9 to 18 digits";
+      }
+
+      // MICR Validation
+      if (form.micr && !/^\d{9}$/.test(form.micr)) {
+        errs.micr = "MICR code must be 9 digits";
+      }
     }
 
     if (s === 4) {
@@ -235,42 +319,7 @@ const AddApplicant = () => {
       });
     }
 
-    // if (s === 1) {
-    //   [
-    //     "employeeId",
-    //     "department",
-    //     "designation",
-    //     "dob",
-    //     "retirementDate",
-    //     "gender",
-    //     "empCategory",
-    //     "gradePay",
-    //   ].forEach((f) => {
-    //     if (!form[f]) errs[f] = "Required";
-    //   });
-    //   if (form.aadhaar && !/^\d{12}$/.test(form.aadhaar))
-    //     errs.aadhaar = "Aadhaar must be exactly 12 digits";
-    //   if (form.pan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(form.pan))
-    //     errs.pan = "Invalid PAN format";
-    // }
-
-    // if (s === 2) {
-    //   if (form.mobile && !/^\d{10}$/.test(form.mobile))
-    //     errs.mobile = "Mobile must be 10 digits";
-    //   if (form.familyMobile && !/^\d{10}$/.test(form.familyMobile))
-    //     errs.familyMobile = "Family mobile must be 10 digits";
-    //   if (form.pinCode && !/^\d{6}$/.test(form.pinCode))
-    //     errs.pinCode = "PIN must be 6 digits";
-    //   if (!form.mobile) errs.mobile = "Required";
-    // }
-
-    // if (s === 3) {
-    //   ["bankName", "ifsc", "acNo", "acType"].forEach((f) => {
-    //     if (!form[f]) errs[f] = "Required";
-    //   });
-    //   if (form.ifsc && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(form.ifsc))
-    //     errs.ifsc = "Invalid IFSC code";
-    // }
+    console.log("Validation Errors:", errs);
      
     setErrors(errs);
 
@@ -303,11 +352,75 @@ const AddApplicant = () => {
     }
   };
 
+  // const handleReset = () => {
+  //   setForm(initialForm);
+  //   setErrors({});
+  //   setStep(1);
+  //   setShowPreview(false);
+  // };
+
   const handleReset = () => {
-    setForm(initialForm);
+    let fieldsToReset = [];
+
+    // Step 1 → Personal Details
+    if (step === 1) {
+      fieldsToReset = [
+        "employeeId",
+        "ppoNo",
+        "employeeName",
+        "relation",
+        "relationName",
+        "aadhaar",
+        "pan",
+        "dob",
+        "dod",
+        "gender",
+        "caste",
+        "mobile",
+        "familyMobile",
+        "pinCode",
+        "permAddress",
+        "corrAddress",
+      ];
+    }
+
+    // Step 2 → Pension Details
+    else if (step === 2) {
+      fieldsToReset = [
+        "department",
+        "designation",
+        "doj",
+        "retirementDate",
+        "gradePay",
+        "lastSalary",
+        "pfms",
+        "categoryType",
+        "acp",
+        "notionalIncrement",
+      ];
+    }
+
+    // Step 3 → Bank Details
+    else if (step === 3) {
+      fieldsToReset = ["bankName", "ifsc", "micr", "acNo", "acType"];
+    }
+
+    // Step 4 → Documents
+    else if (step === 4) {
+      fieldsToReset = ["photo", "signature", "salarySlip", "deathCertificate"];
+    }
+
+    setForm((prev) => {
+      const updated = { ...prev };
+
+      fieldsToReset.forEach((field) => {
+        updated[field] = initialForm[field];
+      });
+
+      return updated;
+    });
+
     setErrors({});
-    setStep(1);
-    setShowPreview(false);
   };
 
   // ── Submit ───────────────────────────────────────────────────────────────
@@ -319,8 +432,7 @@ const AddApplicant = () => {
         if (v !== null && v !== undefined) fd.append(k, v);
       });
       const res = await fetch(
-        "https://pension-portal-backend.onrender.com/api/pensioners",
-        // "http://localhost:5000/api/pensioners",
+        `${API}/api/pensioners`,
         { method: "POST", body: fd },
       );
       const data = await res.json();
@@ -416,7 +528,10 @@ const AddApplicant = () => {
                         ["Gender", form.gender],
                         ["Caste", form.caste],
                         ["Relation", form.relation],
-                        ["Name of Spouse/Father/Mother/Self", form.relationName],
+                        [
+                          "Name of Spouse/Father/Mother/Self",
+                          form.relationName,
+                        ],
                       ].map(([label, val]) => (
                         <div
                           key={label}
@@ -480,7 +595,7 @@ const AddApplicant = () => {
                         ["Department", form.department],
                         ["Designation", form.designation],
                         ["Retirement Date", form.retirementDate],
-                        ["Employee Category", form.empCategory],
+                        // ["Employee Category", form.empCategory],
                         ["Grade Pay", form.gradePay],
                         ["Last Salary", form.lastSalary],
                       ].map(([label, val]) => (
@@ -512,7 +627,7 @@ const AddApplicant = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                       {[
                         ["Category Type", form.categoryType],
-                        ["Category %", form.categoryPct],
+                        // ["Category %", form.categoryPct],
                         ["ACP", form.acp],
                         ["Notional Increment", form.notionalIncrement],
                         ["PFMS", form.pfms],
@@ -722,9 +837,14 @@ const AddApplicant = () => {
                       onChange={handleChange}
                       placeholder="ABCDE1234F"
                     />
-                    {errors.pan && (
-                      <p className="text-red-500 text-xs mt-1">{errors.pan}</p>
+
+                    {panError && (
+                      <p className="text-red-500 text-xs mt-1">{panError}</p>
                     )}
+
+                    {/* {errors.pan && (
+                      <p className="text-red-500 text-xs mt-1">{errors.pan}</p>
+                    )} */}
                   </div>
 
                   <div>
@@ -779,7 +899,7 @@ const AddApplicant = () => {
                   /> */}
                 </FormSection>
 
-                <FormSection icon="📍" title="Contact & Address">
+                <FormSection title="Contact & Address">
                   <div>
                     <InputField
                       label="Mobile"
@@ -820,7 +940,64 @@ const AddApplicant = () => {
                       </p>
                     )}
                   </div>
+
                   <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Permanent Address
+                    </label>
+
+                    <textarea
+                      rows={3}
+                      name="permAddress"
+                      value={form.permAddress}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                  </div>
+
+                  {/* Checkbox */}
+                  <div className="md:col-span-2 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="sameAddress"
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setForm((prev) => ({
+                            ...prev,
+                            corrAddress: prev.permAddress,
+                          }));
+                        } else {
+                          setForm((prev) => ({
+                            ...prev,
+                            corrAddress: "",
+                          }));
+                        }
+                      }}
+                    />
+
+                    <label
+                      htmlFor="sameAddress"
+                      className="text-sm text-gray-700"
+                    >
+                      Same as Permanent Address
+                    </label>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Correspondence Address
+                    </label>
+
+                    <textarea
+                      rows={3}
+                      name="corrAddress"
+                      value={form.corrAddress}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                  </div>
+
+                  {/* <div className="md:col-span-2">
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Permanent Address
                     </label>
@@ -843,7 +1020,7 @@ const AddApplicant = () => {
                       onChange={handleChange}
                       className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                     />
-                  </div>
+                  </div> */}
                 </FormSection>
               </>
             )}
@@ -855,8 +1032,8 @@ const AddApplicant = () => {
             {!showPreview && step === 2 && (
               <>
                 <ErrorBanner />
-                <FormSection icon="👤" title="Pension Details">
-                  <div>
+                <FormSection title="Pension Details">
+                  {/* <div>
                     <SelectField
                       label="Department"
                       required
@@ -870,7 +1047,22 @@ const AddApplicant = () => {
                         {errors.department}
                       </p>
                     )}
+                  </div> */}
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Department
+                    </label>
+
+                    <input
+                      type="text"
+                      name="department"
+                      value={form.department}
+                      readOnly
+                      className="w-full border border-gray-300 bg-gray-100 rounded px-3 py-2 text-sm text-gray-600 cursor-not-allowed"
+                    />
                   </div>
+
                   <div>
                     <SelectField
                       label="Designation"
@@ -910,7 +1102,7 @@ const AddApplicant = () => {
                     )}
                   </div>
 
-                  <div>
+                  {/* <div>
                     <SelectField
                       label="Employee Category"
                       required
@@ -924,7 +1116,7 @@ const AddApplicant = () => {
                         {errors.empCategory}
                       </p>
                     )}
-                  </div>
+                  </div> */}
                   <div>
                     <InputField
                       label="Grade Pay"
@@ -948,6 +1140,19 @@ const AddApplicant = () => {
                 </FormSection>
 
                 <FormSection icon="📂" title="Pension Category">
+                  <div>
+                    <InputField
+                      label="PFMS"
+                      name="pfms"
+                      value={form.pfms}
+                      onChange={handleChange}
+                      placeholder="e.g. PFMS2024001234"
+                    />
+                    {errors.pfms && (
+                      <p className="text-red-500 text-xs mt-1">{errors.pfms}</p>
+                    )}
+                  </div>
+
                   <RadioGroup
                     label="Category Type"
                     name="categoryType"
@@ -955,13 +1160,13 @@ const AddApplicant = () => {
                     onChange={handleChange}
                     options={["Self", "Family", "Disability", "Other"]}
                   />
-                  <RadioGroup
+                  {/* <RadioGroup
                     label="Category %"
                     name="categoryPct"
                     value={form.categoryPct}
                     onChange={handleChange}
                     options={["100", "90", "75"]}
-                  />
+                  /> */}
                   <RadioGroup
                     label="ACP"
                     name="acp"
@@ -976,12 +1181,6 @@ const AddApplicant = () => {
                     onChange={handleChange}
                     options={["Y", "N"]}
                   />
-                  <InputField
-                    label="PFMS"
-                    name="pfms"
-                    value={form.pfms}
-                    onChange={handleChange}
-                  />
                 </FormSection>
               </>
             )}
@@ -993,7 +1192,7 @@ const AddApplicant = () => {
               <>
                 <ErrorBanner />
                 <FormSection icon="🏦" title="Bank Details">
-                  <div>
+                  {/* <div>
                     <InputField
                       label="Bank Name"
                       required
@@ -1006,7 +1205,25 @@ const AddApplicant = () => {
                         {errors.bankName}
                       </p>
                     )}
+                  </div> */}
+
+                  <div>
+                    <SelectField
+                      label="Bank Name"
+                      required
+                      name="bankName"
+                      value={form.bankName}
+                      onChange={handleChange}
+                      options={banks}
+                    />
+
+                    {errors.bankName && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.bankName}
+                      </p>
+                    )}
                   </div>
+
                   <div>
                     <InputField
                       label="IFSC"
@@ -1069,6 +1286,7 @@ const AddApplicant = () => {
                       name="photo"
                       onChange={handleChange}
                       accept="image/*"
+                      Icon={Camera}
                     />
                     {form.photo && (
                       <p className="text-green-600 text-xs mt-1">
@@ -1082,6 +1300,7 @@ const AddApplicant = () => {
                       name="signature"
                       onChange={handleChange}
                       accept="image/*"
+                      Icon={PenTool}
                     />
                     {form.signature && (
                       <p className="text-green-600 text-xs mt-1">
@@ -1095,6 +1314,7 @@ const AddApplicant = () => {
                       name="salarySlip"
                       onChange={handleChange}
                       accept="application/pdf"
+                      Icon={FileText}
                     />
                     {form.salarySlip && (
                       <p className="text-green-600 text-xs mt-1">
@@ -1108,6 +1328,7 @@ const AddApplicant = () => {
                       name="deathCertificate"
                       onChange={handleChange}
                       accept="application/pdf,image/*"
+                      Icon={FileBadge}
                     />
                     {form.deathCertificate && (
                       <p className="text-green-600 text-xs mt-1">

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { API } from "../data/api";
 import Navbar from "../components/layout/Navbar";
 import ActionBar from "../components/layout/ActionBar";
 import Breadcrumb from "../components/ui/Breadcrumb";
@@ -48,7 +48,7 @@ const Dashboard = () => {
 
       try {
         const res = await fetch(
-          `https://pension-portal-backend.onrender.com/api/pensioners/department/${departmentId}`,
+          `${API}/api/pensioners/department/${departmentId}`,
         );
 
         const data = await res.json();

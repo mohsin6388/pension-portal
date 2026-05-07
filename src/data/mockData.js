@@ -101,6 +101,28 @@ export const familyMember = [
   "Mother",
   "Spouse",
 ]
+
+export const banks = [
+  "State Bank of India",
+  "Punjab National Bank",
+  "Bank of Baroda",
+  "Canara Bank",
+  "Union Bank of India",
+  "Indian Bank",
+  "Bank of India",
+  "Central Bank of India",
+  "UCO Bank",
+  "Punjab & Sind Bank",
+  "HDFC Bank",
+  "ICICI Bank",
+  "Axis Bank",
+  "Kotak Mahindra Bank",
+  "IDFC First Bank",
+  "IndusInd Bank",
+  "Yes Bank",
+  "AU Small Finance Bank",
+];
+
 export const designations = ["Clerk", "Officer", "Supervisor", "Junior Engineer"];
 export const categories = ['A', 'B', 'C', 'D'];
 export const castes = ['General', 'OBC', 'SC', 'ST'];

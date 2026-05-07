@@ -74,7 +74,7 @@ export const TextareaField = ({ label, required, placeholder, value, onChange, n
   </div>
 );
 
-export const UploadField = ({ label, required, accept, hint, value, onChange, name }) => {
+export const UploadField = ({ label, required, accept, hint, value, onChange, name, Icon }) => {
   const handleChange = (e) => {
     const file = e.target.files[0];
     if (file && onChange) onChange({ target: { name, value: file } });
@@ -86,9 +86,17 @@ export const UploadField = ({ label, required, accept, hint, value, onChange, na
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-blue-400 bg-gray-50 transition-colors min-h-[100px]">
-        <input type="file" accept={accept} className="hidden" onChange={handleChange} />
-        <span className="text-2xl mb-1">📎</span>
-        <span className="text-sm text-blue-700 font-medium">{value ? value.name : `Upload ${label}`}</span>
+        <input
+          type="file"
+          accept={accept}
+          className="hidden"
+          onChange={handleChange}
+        />
+        {/* Dynamic Icon */}
+        {Icon && <Icon size={32} className="text-blue-600 mb-2" />}
+        <span className="text-sm text-blue-700 font-medium">
+          {value ? value.name : `Upload ${label}`}
+        </span>
         <span className="text-xs text-gray-400 mt-1">{hint}</span>
       </label>
     </div>
