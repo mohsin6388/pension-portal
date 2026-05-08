@@ -452,7 +452,10 @@ const AddApplicant = () => {
         type: "success",
         message: "Pensioner added successfully!",
       });
-      navigate("/dashboard");
+
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1500);
     } catch (err) {
       setNotify({
         open: true,
