@@ -6,7 +6,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Applicants from './pages/Applicants';
 import AddApplicant from './pages/AddApplicant';
-import ApplicantDetail from './pages/ApplicantDetail';
+import ApplicantView from './pages/ApplicantView';
 
 function App() {
   return (
@@ -14,10 +14,32 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/applicants" element={<ProtectedRoute><Applicants /></ProtectedRoute>} />
-          <Route path="/applicants/add" element={<ProtectedRoute><AddApplicant /></ProtectedRoute>} />
-          <Route path="/applicants/:id" element={<ProtectedRoute><ApplicantDetail /></ProtectedRoute>} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/applicants"
+            element={
+              <ProtectedRoute>
+                <Applicants />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/applicants/add"
+            element={
+              <ProtectedRoute>
+                <AddApplicant />
+              </ProtectedRoute>
+            }
+          />
+          {/* <Route path="/applicants/:id" element={<ProtectedRoute><ApplicantDetail /></ProtectedRoute>} /> */}
+          <Route path="/applicants/:id" element={<ApplicantView />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>

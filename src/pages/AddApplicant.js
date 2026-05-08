@@ -5,6 +5,8 @@ import ActionBar from "../components/layout/ActionBar";
 import Breadcrumb from "../components/ui/Breadcrumb";
 import { API } from "../data/api";
 
+import ApplicantView from "./ApplicantView";
+
 import {
   InputField,
   SelectField,

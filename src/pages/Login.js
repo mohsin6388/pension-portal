@@ -91,12 +91,12 @@ const Login = () => {
             </div>
           </div> */}
         </div>
-        <div className="text-center">
+        <div className="text-center pr-16">
           <div
             className="text-2xl font-bold text-gray-800"
-            style={{ fontFamily: "'Noto Sans Devanagari', sans-serif" }}
+            style={{ fontFamily: "'Arial',Noto Sans Devanagari', sans-serif" }}
           >
-            {isHindi ? "मंत्रालय पोर्टल" : "Municipal Corporation Portal"}
+            {isHindi ? "पेंशन सेवा पोर्टल" : "Pension Service Portal"}
           </div>
           <div
             className="text-sm text-gray-500"
@@ -171,7 +171,7 @@ const Login = () => {
                   fontFamily: "'Noto Sans Devanagari', sans-serif",
                 }}
               >
-                {isHindi ? "उपयोगकर्ता लॉगिन" : "User Login"}
+                {isHindi ? "ऑपरेटर लॉगिन" : "Operator Login"}
               </h3>
               <p
                 className="text-center text-gray-500 text-xs mb-5"
@@ -200,7 +200,7 @@ const Login = () => {
                     className="block text-xs font-medium text-gray-600 mb-1"
                     style={{ fontFamily: "'Noto Sans Devanagari', sans-serif" }}
                   >
-                    {isHindi ? "उपयोगकर्ता नाम" : "Username"}{" "}
+                    {isHindi ? "ऑपरेटर आईडी" : "Opeator ID"}{" "}
                     <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -214,8 +214,8 @@ const Login = () => {
                       onChange={handleChange}
                       placeholder={
                         isHindi
-                          ? "अपना उपयोगकर्ता नाम दर्ज करें"
-                          : "Enter your username"
+                          ? "अपना ऑपरेटर आईडी दर्ज करें"
+                          : "Enter Your Operator ID"
                       }
                       className="w-full border border-gray-300 rounded px-3 py-2 pl-9 text-sm focus:outline-none focus:border-blue-500"
                       style={{
@@ -245,7 +245,7 @@ const Login = () => {
                       placeholder={
                         isHindi
                           ? "अपना पासवर्ड दर्ज करें"
-                          : "Enter your password"
+                          : "Enter Your Password"
                       }
                       className="w-full border border-gray-300 rounded px-3 py-2 pl-9 text-sm focus:outline-none focus:border-blue-500"
                       style={{
