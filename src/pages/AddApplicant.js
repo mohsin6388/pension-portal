@@ -4,6 +4,8 @@ import Navbar from "../components/layout/Navbar";
 import ActionBar from "../components/layout/ActionBar";
 import Breadcrumb from "../components/ui/Breadcrumb";
 import { API } from "../data/api";
+import  Loading  from "../components/ui/Loading"
+import { Notification } from "../components/ui/Notify"
 
 import ApplicantView from "./ApplicantView";
 
@@ -154,6 +156,12 @@ const AddApplicant = () => {
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [panError, setPanError] = useState("");
+
+  const [notify, setNotify] = useState({
+    open: false,
+    type: "",
+    message: "",
+  });
 
   // ── Handle Change ────────────────────────────────────────────────────────
   const handleChange = (e) => {
@@ -439,10 +447,18 @@ const AddApplicant = () => {
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Server Error");
-      alert("✅ Pensioner added successfully");
+      setNotify({
+        open: true,
+        type: "success",
+        message: "Pensioner added successfully!",
+      });
       navigate("/dashboard");
     } catch (err) {
-      alert("❌ " + (err.message || "Submit Failed"));
+      setNotify({
+        open: true,
+        type: "error",
+        message: err.message || "Submit Failed",
+      }); 
     } finally {
       setLoading(false);
     }
@@ -745,7 +761,11 @@ const AddApplicant = () => {
                         background: "linear-gradient(135deg, #1a2a5e, #2d4a9a)",
                       }}
                     >
-                      {loading ? "Submitting…" : "✔ Final Submit"}
+                      {loading ? (
+                        <Loading size={18} text="Submitting..." />
+                      ) : (
+                        "✔ Final Submit"
+                      )}
                     </button>
                   </div>
                 </div>
