@@ -50,8 +50,15 @@ const Login = () => {
       {/* Gov header */}
       <div className="bg-white border-b border-gray-200 px-6 py-2 flex items-center justify-between text-xs text-gray-600">
         <div className="flex items-center gap-3">
-          <div className="w-6 h-6 rounded-full bg-blue-800 flex items-center justify-center">
-            <span className="text-white text-xs">🇮🇳</span>
+          {/* <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center border borer-2">
+            <img src='https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg' className='w-fit h-fit'/>
+          </div> */}
+          <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center border-2 border-gray-200 overflow-hidden">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg"
+              alt="India Emblem"
+              className="w-5 h-5 object-contain"
+            />
           </div>
           <span className="font-medium">भारत सरकार | Government of India</span>
         </div>
@@ -117,37 +124,84 @@ const Login = () => {
       {/* Main content */}
       <div className="flex flex-1">
         {/* Left: image placeholder */}
+
         <div
-          className="w-[60%] relative overflow-hidden"
+          className="w-[60%] relative overflow-hidden bg-cover bg-center"
           style={{
-            background: "linear-gradient(135deg, #1a2a5e 0%, #2d4a9a 100%)",
+            backgroundImage: `
+       linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.07)),
+      url("https://kmc.up.nic.in/images/slide93070171741770456.jpeg?1778221503")
+    `,
           }}
         >
-          {/* Left Side of Login Page */}
-          <div className="absolute inset-0 flex items-center justify-center">
+          {/* dark overlay */}
+          <div className="absolute inset-0 bg-[#0f172a]/40"></div>
+
+          {/* Bottom Content */}
+          <div className="relative z-10 h-full flex items-end pb-20 px-10">
+            <div className="flex items-center gap-5 bg-black/20 backdrop-blur-sm px-6 py-5 rounded-xl border border-white/10">
+              {/* Logo/Image */}
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg"
+                alt="Government Logo"
+                className="w-16 h-16 object-contain bg-white rounded-full p-2"
+              />
+
+              {/* Text */}
+              <div className="text-white">
+                <h2 className="text-2xl font-semibold tracking-wide">
+                  Kanpur Municipal Corporation
+                </h2>
+
+                <p className="text-sm text-gray-200 mt-1 leading-6 max-w-md">
+                  Official digital platform for pension application processing,
+                  verification and employee record management.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* <div
+          className="w-[60%] relative overflow-hidden bg-cover bg-center"
+          style={{
+            backgroundImage: `
+      linear-gradient(rgba(15,23,42,0.75), rgba(30,41,59,0.85)),
+      url("https://kmc.up.nic.in/images/slide93070171741770456.jpeg?1778221503")
+    `,
+          }}
+        >
+        
+          <div className="absolute inset-0 flex items-center justify-center backdrop-blur-[1px]">
             <div className="text-center text-white px-8">
-              <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-6 border-4 border-white/30">
+              <div className="w-32 h-32 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center mx-auto mb-6 border border-white/20 shadow-2xl">
                 <span className="text-6xl">🏛️</span>
               </div>
-              <h2 className="text-3xl font-bold mb-3">
+
+              <h2 className="text-4xl font-bold mb-3 tracking-wide">
                 Municipal Corporation Portal
               </h2>
-              <p className="text-blue-200 text-lg">
+
+              <p className="text-blue-100 text-lg font-medium">
                 Department of Citizen Services
               </p>
-              <p className="text-blue-300 text-sm mt-4 max-w-sm mx-auto">
+
+              <p className="text-blue-200 text-sm mt-4 max-w-sm mx-auto leading-6">
                 Manage pension applications, approvals, and records for Kanpur
                 Municipal Corporation employees.
               </p>
-              <div className="flex justify-center gap-6 mt-8 text-blue-200 text-sm">
+
+              <div className="flex justify-center gap-8 mt-10 text-blue-100 text-sm">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-white">500+</div>
                   <div>Pensioners</div>
                 </div>
+
                 <div className="text-center">
                   <div className="text-3xl font-bold text-white">24/7</div>
                   <div>Support</div>
                 </div>
+
                 <div className="text-center">
                   <div className="text-3xl font-bold text-white">100%</div>
                   <div>Digital</div>
@@ -155,7 +209,7 @@ const Login = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Right: login form */}
         <div className="w-[40%] flex items-center justify-center p-16 bg-white shadow-2xl">
