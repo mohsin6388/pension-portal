@@ -5,8 +5,8 @@ import ActionBar from "../components/layout/ActionBar";
 import Breadcrumb from "../components/ui/Breadcrumb";
 import { API } from "../data/api";
 import  Loading  from "../components/ui/Loading"
-import { Notification } from "../components/ui/Notify"
-
+import  Notification from "../components/ui/Notify"
+import { AlertTriangle } from "lucide-react";
 import ApplicantView from "./ApplicantView";
 
 import {
@@ -157,7 +157,7 @@ const AddApplicant = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [panError, setPanError] = useState("");
 
-  const [notify, setNotify] = useState({
+  const [notification, setNotification] = useState({
     open: false,
     type: "",
     message: "",
@@ -323,11 +323,11 @@ const AddApplicant = () => {
       }
     }
 
-    if (s === 4) {
-      ["photo", "signature"].forEach((f) => {
-        if (!form[f]) errs[f] = "Required";
-      });
-    }
+    // if (s === 4) {
+    //   ["photo", "signature"].forEach((f) => {
+    //     if (!form[f]) errs[f] = "Required";
+    //   });
+    // }
 
     console.log("Validation Errors:", errs);
      
@@ -441,23 +441,50 @@ const AddApplicant = () => {
       Object.entries(form).forEach(([k, v]) => {
         if (v !== null && v !== undefined) fd.append(k, v);
       });
-      const res = await fetch(
-        `${API}/api/pensioners`,
-        { method: "POST", body: fd },
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Server Error");
-      setNotify({
-        open: true,
-        type: "success",
-        message: "Pensioner added successfully!",
-      });
 
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1500);
+      const token = localStorage.getItem("token");
+
+      const user = JSON.parse(localStorage.getItem("user"));
+
+
+      const res = await fetch(`${API}/api/pensioners`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "x-user-role": user?.role,
+          "x-user-id": user?.id,
+        },
+        body: fd,
+      });
+      const data = await res.json();
+      const { message, success } = data;
+      // if (!res.ok) throw new Error(data.message || "Server Error");
+
+      if(success){
+
+        setNotification({
+          open: true,
+          type: "success",
+          message: "Employee Pension saved successfully",
+        });
+
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 3000);
+
+      } else {
+        setNotification({
+          open: true,
+          type: "error",
+          message: "Pensioner Not Added.",
+        });
+
+      }
+      
+  
+
     } catch (err) {
-      setNotify({
+      setNotification({
         open: true,
         type: "error",
         message: err.message || "Submit Failed",
@@ -478,551 +505,577 @@ const AddApplicant = () => {
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-scree bg-black " style={{ background: "#f0f2f5" }}>
-      <Navbar />
+    <>
+      <Notification
+        open={notification.open}
+        type={notification.type}
+        message={notification.message}
+        onClose={() =>
+          setNotification((prev) => ({
+            ...prev,
+            open: false,
+          }))
+        }
+      />
 
-      <div className="px-6 py-4 max-w-7xl mx-auto">
-        <Breadcrumb
-          items={[
-            { label: "Home", link: "/dashboard" },
-            { label: "Add Applicant" },
-          ]}
-        />
-        <ActionBar />
+      <div className="min-h-scree bg-black " style={{ background: "#f0f2f5" }}>
+        <Navbar />
 
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {/* ── Header + Step Bar ─────────────────────────────── */}
-          <div
-            style={{
-              background: "linear-gradient(135deg, #1a2a5e 0%, #0f1d45 100%)",
-              fontFamily: "Arial",
-            }}
-          >
-            <div className="px-6 pt-5 pb-2 flex items-center justify-between">
-              <div>
-                <div
-                  className="text-white font-bold text-lg pb-2"
-                  style={{
-                    fontFamily: "Arial",
-                  }}
-                >
-                  Pensioner Registration
+        <div className="px-6 py-6 max-w-7xl mx-auto ">
+          <Breadcrumb
+            items={[
+              { label: "Home", link: "/dashboard" },
+              { label: "Add Applicant" },
+            ]}
+          />
+          {/* <ActionBar /> */}
+
+          <div className="bg-white my-12 shadow-sm overflow-hidden">
+            {/* ── Header + Step Bar ─────────────────────────────── */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #1a2a5e 0%, #0f1d45 100%)",
+                fontFamily: "Arial",
+              }}
+            >
+              <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                <div>
+                  <div
+                    className="text-white font-bold text-lg pb-2"
+                    style={{
+                      fontFamily: "Arial",
+                    }}
+                  >
+                    Pensioner Registration
+                  </div>
+                  <div className="text-blue-300 text-xs">
+                    {showPreview
+                      ? "Review your application before submitting"
+                      : `Step ${step} of 4 — ${STEPS[step - 1].label}`}
+                  </div>
                 </div>
-                <div className="text-blue-300 text-xs">
-                  {showPreview
-                    ? "Review your application before submitting"
-                    : `Step ${step} of 4 — ${STEPS[step - 1].label}`}
-                </div>
-              </div>
-              {/* <span className="text-white text-2xl opacity-50">
+                {/* <span className="text-white text-2xl opacity-50">
                 {showPreview ? "🔍" : STEPS[step - 1].icon}
               </span> */}
+              </div>
+              <StepBar current={showPreview ? 5 : step} />
             </div>
-            <StepBar current={showPreview ? 5 : step} />
-          </div>
 
-          <div className="p-6">
-            {/* ══════════════════════════════════════════════════
+            <div className="p-6">
+              {/* ══════════════════════════════════════════════════
                 PREVIEW
             ══════════════════════════════════════════════════ */}
 
-            {showPreview && (
-              <>
-                <div className="space-y-6">
-                  {/* PERSONAL DETAILS */}
-                  <div className="border border-blue-200 bg-blue-50 rounded-xl p-5">
-                    <div
-                      className="text-lg font-bold text-blue-800 mb-4"
-                      style={{ fontFamily: "Arial" }}
-                    >
-                      Personal Details
-                    </div>
+              {showPreview && (
+                <>
+                  <div className="space-y-6">
+                    {/* PERSONAL DETAILS */}
+                    <div className="border border-blue-200 bg-blue-50 rounded-xl p-5">
+                      <div
+                        className="text-lg font-bold text-blue-800 mb-4"
+                        style={{ fontFamily: "Arial" }}
+                      >
+                        Personal Details
+                      </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                      {[
-                        ["Employee ID", form.employeeId],
-                        ["PPO No", form.ppoNo],
-                        ["Employee Name", form.employeeName],
-                        ["Aadhaar", form.aadhaar],
-                        ["PAN", form.pan],
-                        ["Date of Birth", form.dob],
-                        ["Gender", form.gender],
-                        ["Caste", form.caste],
-                        ["Relation", form.relation],
-                        [
-                          "Name of Spouse/Father/Mother/Self",
-                          form.relationName,
-                        ],
-                      ].map(([label, val]) => (
-                        <div
-                          key={label}
-                          className="bg-white rounded-lg px-3 py-2 border border-blue-100"
-                        >
-                          <span className="text-gray-400 text-xs block">
-                            {label}
-                          </span>
-
-                          <span className="font-medium text-gray-800">
-                            {val || "—"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* CONTACT DETAILS */}
-                  <div className="border border-blue-200 bg-blue-50 rounded-xl p-5">
-                    <div
-                      className="text-lg font-bold text-blue-800 mb-4"
-                      style={{ fontFamily: "Arial" }}
-                    >
-                      Contact & Address
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                      {[
-                        ["Mobile", form.mobile],
-                        ["Family Mobile", form.familyMobile],
-                        ["PIN Code", form.pinCode],
-                        ["Permanent Address", form.permAddress],
-                      ].map(([label, val]) => (
-                        <div
-                          key={label}
-                          className="bg-white rounded-lg px-3 py-2 border border-blue-100"
-                        >
-                          <span className="text-gray-400 text-xs block">
-                            {label}
-                          </span>
-
-                          <span className="font-medium text-gray-800 break-words">
-                            {val || "—"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* PENSION DETAILS */}
-                  <div className="border border-blue-200 bg-blue-50 rounded-xl p-5">
-                    <div
-                      className="text-lg font-bold text-blue-800 mb-4"
-                      style={{ fontFamily: "Arial" }}
-                    >
-                      Pension Details
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                      {[
-                        ["Department", form.department],
-                        ["Designation", form.designation],
-                        ["Retirement Date", form.retirementDate],
-                        // ["Employee Category", form.empCategory],
-                        ["Grade Pay", form.gradePay],
-                        ["Last Salary", form.lastSalary],
-                      ].map(([label, val]) => (
-                        <div
-                          key={label}
-                          className="bg-white rounded-lg px-3 py-2 border border-blue-100"
-                        >
-                          <span className="text-gray-400 text-xs block">
-                            {label}
-                          </span>
-
-                          <span className="font-medium text-gray-800">
-                            {val || "—"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* PENSION CATEGORY */}
-                  <div className="border border-blue-200 bg-blue-50 rounded-xl p-5">
-                    <div
-                      className="text-lg font-bold text-blue-800 mb-4"
-                      style={{ fontFamily: "Arial" }}
-                    >
-                      Pension Category
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                      {[
-                        ["Category Type", form.categoryType],
-                        // ["Category %", form.categoryPct],
-                        ["ACP", form.acp],
-                        ["Notional Increment", form.notionalIncrement],
-                        ["PFMS", form.pfms],
-                      ].map(([label, val]) => (
-                        <div
-                          key={label}
-                          className="bg-white rounded-lg px-3 py-2 border border-blue-100"
-                        >
-                          <span className="text-gray-400 text-xs block">
-                            {label}
-                          </span>
-
-                          <span className="font-medium text-gray-800">
-                            {val || "—"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* BANK DETAILS */}
-                  <div className="border border-blue-200 bg-blue-50 rounded-xl p-5">
-                    <div
-                      className="text-lg font-bold text-blue-800 mb-4"
-                      style={{ fontFamily: "Arial" }}
-                    >
-                      Bank Details
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                      {[
-                        ["Bank Name", form.bankName],
-                        ["IFSC", form.ifsc],
-                        ["MICR", form.micr],
-                        ["Account Number", form.acNo],
-                        ["Account Type", form.acType],
-                      ].map(([label, val]) => (
-                        <div
-                          key={label}
-                          className="bg-white rounded-lg px-3 py-2 border border-blue-100"
-                        >
-                          <span className="text-gray-400 text-xs block">
-                            {label}
-                          </span>
-
-                          <span className="font-medium text-gray-800">
-                            {val || "—"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* DOCUMENTS */}
-                  <div className="border border-blue-200 bg-blue-50 rounded-xl p-5">
-                    <div
-                      className="text-lg font-bold text-blue-800 mb-4"
-                      style={{ fontFamily: "Arial" }}
-                    >
-                      Uploaded Documents
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                      {[
-                        ["Photo", form.photo],
-                        ["Signature", form.signature],
-                        ["Salary Slip", form.salarySlip],
-                        ["Death Certificate", form.deathCertificate],
-                      ].map(([label, file]) => (
-                        <div
-                          key={label}
-                          className="bg-white rounded-lg px-3 py-2 border border-blue-100"
-                        >
-                          <span className="text-gray-400 text-xs block">
-                            {label}
-                          </span>
-
-                          <span
-                            className={`font-medium text-sm ${
-                              file ? "text-green-600" : "text-gray-400"
-                            }`}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        {[
+                          ["Employee ID", form.employeeId],
+                          ["PPO No", form.ppoNo],
+                          ["Employee Name", form.employeeName],
+                          ["Aadhaar", form.aadhaar],
+                          ["PAN", form.pan],
+                          ["Date of Birth", form.dob],
+                          ["Gender", form.gender],
+                          ["Caste", form.caste],
+                          ["Relation", form.relation],
+                          [
+                            "Name of Spouse/Father/Mother/Self",
+                            form.relationName,
+                          ],
+                        ].map(([label, val]) => (
+                          <div
+                            key={label}
+                            className="bg-white rounded-lg px-3 py-2 border border-blue-100"
                           >
-                            {file ? `✅ ${file.name}` : "Not uploaded"}
-                          </span>
-                        </div>
-                      ))}
+                            <span className="text-gray-400 text-xs block">
+                              {label}
+                            </span>
+
+                            <span className="font-medium text-gray-800">
+                              {val || "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* CONTACT DETAILS */}
+                    <div className="border border-blue-200 bg-blue-50 rounded-xl p-5">
+                      <div
+                        className="text-lg font-bold text-blue-800 mb-4"
+                        style={{ fontFamily: "Arial" }}
+                      >
+                        Contact & Address
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        {[
+                          ["Mobile", form.mobile],
+                          ["Family Mobile", form.familyMobile],
+                          ["PIN Code", form.pinCode],
+                          ["Permanent Address", form.permAddress],
+                        ].map(([label, val]) => (
+                          <div
+                            key={label}
+                            className="bg-white rounded-lg px-3 py-2 border border-blue-100"
+                          >
+                            <span className="text-gray-400 text-xs block">
+                              {label}
+                            </span>
+
+                            <span className="font-medium text-gray-800 break-words">
+                              {val || "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* PENSION DETAILS */}
+                    <div className="border border-blue-200 bg-blue-50 rounded-xl p-5">
+                      <div
+                        className="text-lg font-bold text-blue-800 mb-4"
+                        style={{ fontFamily: "Arial" }}
+                      >
+                        Pension Details
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        {[
+                          ["Department", form.department],
+                          ["Designation", form.designation],
+                          ["Retirement Date", form.retirementDate],
+                          // ["Employee Category", form.empCategory],
+                          ["Grade Pay", form.gradePay],
+                          ["Last Salary", form.lastSalary],
+                        ].map(([label, val]) => (
+                          <div
+                            key={label}
+                            className="bg-white rounded-lg px-3 py-2 border border-blue-100"
+                          >
+                            <span className="text-gray-400 text-xs block">
+                              {label}
+                            </span>
+
+                            <span className="font-medium text-gray-800">
+                              {val || "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* PENSION CATEGORY */}
+                    <div className="border border-blue-200 bg-blue-50 rounded-xl p-5">
+                      <div
+                        className="text-lg font-bold text-blue-800 mb-4"
+                        style={{ fontFamily: "Arial" }}
+                      >
+                        Pension Category
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        {[
+                          ["Category Type", form.categoryType],
+                          // ["Category %", form.categoryPct],
+                          ["ACP", form.acp],
+                          ["Notional Increment", form.notionalIncrement],
+                          ["PFMS", form.pfms],
+                        ].map(([label, val]) => (
+                          <div
+                            key={label}
+                            className="bg-white rounded-lg px-3 py-2 border border-blue-100"
+                          >
+                            <span className="text-gray-400 text-xs block">
+                              {label}
+                            </span>
+
+                            <span className="font-medium text-gray-800">
+                              {val || "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* BANK DETAILS */}
+                    <div className="border border-blue-200 bg-blue-50 rounded-xl p-5">
+                      <div
+                        className="text-lg font-bold text-blue-800 mb-4"
+                        style={{ fontFamily: "Arial" }}
+                      >
+                        Bank Details
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        {[
+                          ["Bank Name", form.bankName],
+                          ["IFSC", form.ifsc],
+                          ["MICR", form.micr],
+                          ["Account Number", form.acNo],
+                          ["Account Type", form.acType],
+                        ].map(([label, val]) => (
+                          <div
+                            key={label}
+                            className="bg-white rounded-lg px-3 py-2 border border-blue-100"
+                          >
+                            <span className="text-gray-400 text-xs block">
+                              {label}
+                            </span>
+
+                            <span className="font-medium text-gray-800">
+                              {val || "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* DOCUMENTS */}
+                    <div className="border border-blue-200 bg-blue-50 rounded-xl p-5">
+                      <div
+                        className="text-lg font-bold text-blue-800 mb-4"
+                        style={{ fontFamily: "Arial" }}
+                      >
+                        Uploaded Documents
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        {[
+                          ["Photo", form.photo],
+                          ["Signature", form.signature],
+                          ["Salary Slip", form.salarySlip],
+                          ["Death Certificate", form.deathCertificate],
+                        ].map(([label, file]) => (
+                          <div
+                            key={label}
+                            className="bg-white rounded-lg px-3 py-2 border border-blue-100"
+                          >
+                            <span className="text-gray-400 text-xs block">
+                              {label}
+                            </span>
+
+                            <span
+                              className={`font-medium text-sm ${
+                                file ? "text-green-600" : "text-gray-400"
+                              }`}
+                            >
+                              {file ? `✅ ${file.name}` : "Not uploaded"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2 bg-amber-50 border border-amber-300 text-amber-800 px-4 py-3 rounded-xl text-sm">
+                      <AlertTriangle size={18} className="mt-0.5" />
+
+                      <p>
+                        कृपया सभी जानकारी सही एवं ध्यानपूर्वक भरें। एक बार डेटा
+                        सेव हो जाने के बाद उसमें किसी भी प्रकार का संशोधन (Edit)
+                        नहीं किया जा सकेगा।
+                      </p>
                     </div>
                   </div>
-                </div>
 
-                {/* BUTTONS */}
-                <div className="flex justify-between pt-6">
-                  <button
-                    onClick={goBack}
-                    className="px-5 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition"
-                  >
-                    ← Edit Form
-                  </button>
-
-                  <div className="flex gap-3">
+                  {/* BUTTONS */}
+                  <div className="flex justify-between pt-6">
                     <button
-                      onClick={handleReset}
+                      onClick={goBack}
                       className="px-5 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition"
                     >
-                      Reset
+                      ← Edit Form
                     </button>
 
-                    <button
-                      onClick={handleSubmit}
-                      disabled={loading}
-                      className="px-7 py-2 text-white rounded-lg text-sm font-medium transition"
-                      style={{
-                        background: "linear-gradient(135deg, #1a2a5e, #2d4a9a)",
-                      }}
-                    >
-                      {loading ? (
-                        <Loading size={18} text="Submitting..." />
-                      ) : (
-                        "✔ Final Submit"
-                      )}
-                    </button>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleReset}
+                        className="px-5 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition"
+                      >
+                        Reset
+                      </button>
+
+                      <button
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        className="px-7 py-2 text-white rounded-lg text-sm font-medium transition"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #1a2a5e, #2d4a9a)",
+                        }}
+                      >
+                        {loading ? (
+                          <Loading size={18} text="Submitting..." />
+                        ) : (
+                          "✔ Final Submit"
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
 
-            {/* ══════════════════════════════════════════════════
+              {/* ══════════════════════════════════════════════════
                 STEP 1 — Personal Details
             ══════════════════════════════════════════════════ */}
-            {!showPreview && step === 1 && (
-              <>
-                <ErrorBanner />
-                <FormSection title="Personal Details">
-                  <div>
+              {!showPreview && step === 1 && (
+                <>
+                  <ErrorBanner />
+                  <FormSection title="Personal Details">
+                    <div>
+                      <InputField
+                        label="Employee ID"
+                        required
+                        name="employeeId"
+                        value={form.employeeId}
+                        onChange={handleChange}
+                      />
+                      {errors.employeeId && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.employeeId}
+                        </p>
+                      )}
+                    </div>
                     <InputField
-                      label="Employee ID"
-                      required
-                      name="employeeId"
-                      value={form.employeeId}
+                      label="PPO No."
+                      name="ppoNo"
+                      value={form.ppoNo}
                       onChange={handleChange}
                     />
-                    {errors.employeeId && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.employeeId}
-                      </p>
-                    )}
-                  </div>
-                  <InputField
-                    label="PPO No."
-                    name="ppoNo"
-                    value={form.ppoNo}
-                    onChange={handleChange}
-                  />
 
-                  <InputField
-                    label="Employee Name"
-                    name="employeeName"
-                    value={form.employeeName}
-                    onChange={handleChange}
-                  />
-
-                  <div>
-                    <SelectField
-                      label="Relation"
-                      required
-                      name="relation"
-                      value={form.relation}
+                    <InputField
+                      label="Employee Name"
+                      name="employeeName"
+                      value={form.employeeName}
                       onChange={handleChange}
-                      options={familyMember}
                     />
-                    {errors.familyMember && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.familyMember}
-                      </p>
-                    )}
-                  </div>
 
-                  {/* <InputField
+                    <div>
+                      <SelectField
+                        label="Relation"
+                        required
+                        name="relation"
+                        value={form.relation}
+                        onChange={handleChange}
+                        options={familyMember}
+                      />
+                      {errors.familyMember && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.familyMember}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* <InputField
                     label={form.dependentName}
                     name="familyName"
                     value={form.familyName}
                     onChange={handleChange}
                   /> */}
 
-                  <InputField
-                    label={"Name of Spouse/Father/Mother/Self"}
-                    name="relationName"
-                    value={form.relationName}
-                    onChange={handleChange}
-                  />
-
-                  <div>
                     <InputField
-                      label="Aadhaar"
-                      name="aadhaar"
-                      value={form.aadhaar}
+                      label={"Name of Spouse/Father/Mother/Self"}
+                      name="relationName"
+                      value={form.relationName}
                       onChange={handleChange}
-                      placeholder="12 digit Aadhaar"
-                    />
-                    {errors.aadhaar && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.aadhaar}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <InputField
-                      label="PAN"
-                      name="pan"
-                      value={form.pan}
-                      onChange={handleChange}
-                      placeholder="ABCDE1234F"
                     />
 
-                    {panError && (
-                      <p className="text-red-500 text-xs mt-1">{panError}</p>
-                    )}
+                    <div>
+                      <InputField
+                        label="Aadhaar"
+                        name="aadhaar"
+                        value={form.aadhaar}
+                        onChange={handleChange}
+                        placeholder="12 digit Aadhaar"
+                      />
+                      {errors.aadhaar && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.aadhaar}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <InputField
+                        label="PAN"
+                        name="pan"
+                        value={form.pan}
+                        onChange={handleChange}
+                        placeholder="ABCDE1234F"
+                      />
 
-                    {/* {errors.pan && (
+                      {panError && (
+                        <p className="text-red-500 text-xs mt-1">{panError}</p>
+                      )}
+
+                      {/* {errors.pan && (
                       <p className="text-red-500 text-xs mt-1">{errors.pan}</p>
                     )} */}
-                  </div>
+                    </div>
 
-                  <div>
+                    <div>
+                      <InputField
+                        type="date"
+                        label="Date of Birth"
+                        required
+                        name="dob"
+                        value={form.dob}
+                        onChange={handleChange}
+                      />
+                      {errors.dob && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.dob}
+                        </p>
+                      )}
+                    </div>
+
                     <InputField
                       type="date"
-                      label="Date of Birth"
-                      required
-                      name="dob"
-                      value={form.dob}
+                      label="Date of Death"
+                      name="dod"
+                      value={form.dod}
                       onChange={handleChange}
                     />
-                    {errors.dob && (
-                      <p className="text-red-500 text-xs mt-1">{errors.dob}</p>
-                    )}
-                  </div>
+                    <div>
+                      <SelectField
+                        label="Gender"
+                        required
+                        name="gender"
+                        value={form.gender}
+                        onChange={handleChange}
+                        options={["Male", "Female", "Other"]}
+                      />
+                      {errors.gender && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.gender}
+                        </p>
+                      )}
+                    </div>
 
-                  <InputField
-                    type="date"
-                    label="Date of Death"
-                    name="dod"
-                    value={form.dod}
-                    onChange={handleChange}
-                  />
-                  <div>
                     <SelectField
-                      label="Gender"
-                      required
-                      name="gender"
-                      value={form.gender}
+                      label="Caste"
+                      name="caste"
+                      value={form.caste}
                       onChange={handleChange}
-                      options={["Male", "Female", "Other"]}
+                      options={castes}
                     />
-                    {errors.gender && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.gender}
-                      </p>
-                    )}
-                  </div>
-
-                  <SelectField
-                    label="Caste"
-                    name="caste"
-                    value={form.caste}
-                    onChange={handleChange}
-                    options={castes}
-                  />
-                  {/* <InputField
+                    {/* <InputField
                     label="Dependent Name"
                     name="dependentName"
                     value={form.dependentName}
                     onChange={handleChange}
                   /> */}
-                </FormSection>
+                  </FormSection>
 
-                <FormSection title="Contact & Address">
-                  <div>
-                    <InputField
-                      label="Mobile"
-                      required
-                      name="mobile"
-                      value={form.mobile}
-                      onChange={handleChange}
-                    />
-                    {errors.mobile && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.mobile}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <InputField
-                      label="Family Mobile"
-                      name="familyMobile"
-                      value={form.familyMobile}
-                      onChange={handleChange}
-                    />
-                    {errors.familyMobile && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.familyMobile}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <InputField
-                      label="PIN Code"
-                      name="pinCode"
-                      value={form.pinCode}
-                      onChange={handleChange}
-                    />
-                    {errors.pinCode && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.pinCode}
-                      </p>
-                    )}
-                  </div>
+                  <FormSection title="Contact & Address">
+                    <div>
+                      <InputField
+                        label="Mobile"
+                        required
+                        name="mobile"
+                        value={form.mobile}
+                        onChange={handleChange}
+                      />
+                      {errors.mobile && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.mobile}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <InputField
+                        label="Family Mobile"
+                        name="familyMobile"
+                        value={form.familyMobile}
+                        onChange={handleChange}
+                      />
+                      {errors.familyMobile && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.familyMobile}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <InputField
+                        label="PIN Code"
+                        name="pinCode"
+                        value={form.pinCode}
+                        onChange={handleChange}
+                      />
+                      {errors.pinCode && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.pinCode}
+                        </p>
+                      )}
+                    </div>
 
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Permanent Address
-                    </label>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Permanent Address
+                      </label>
 
-                    <textarea
-                      rows={3}
-                      name="permAddress"
-                      value={form.permAddress}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                    />
-                  </div>
+                      <textarea
+                        rows={3}
+                        name="permAddress"
+                        value={form.permAddress}
+                        onChange={handleChange}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                      />
+                    </div>
 
-                  {/* Checkbox */}
-                  <div className="md:col-span-2 flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="sameAddress"
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setForm((prev) => ({
-                            ...prev,
-                            corrAddress: prev.permAddress,
-                          }));
-                        } else {
-                          setForm((prev) => ({
-                            ...prev,
-                            corrAddress: "",
-                          }));
-                        }
-                      }}
-                    />
+                    {/* Checkbox */}
+                    <div className="md:col-span-2 flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="sameAddress"
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setForm((prev) => ({
+                              ...prev,
+                              corrAddress: prev.permAddress,
+                            }));
+                          } else {
+                            setForm((prev) => ({
+                              ...prev,
+                              corrAddress: "",
+                            }));
+                          }
+                        }}
+                      />
 
-                    <label
-                      htmlFor="sameAddress"
-                      className="text-sm text-gray-700"
-                    >
-                      Same as Permanent Address
-                    </label>
-                  </div>
+                      <label
+                        htmlFor="sameAddress"
+                        className="text-sm text-gray-700"
+                      >
+                        Same as Permanent Address
+                      </label>
+                    </div>
 
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Correspondence Address
-                    </label>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Correspondence Address
+                      </label>
 
-                    <textarea
-                      rows={3}
-                      name="corrAddress"
-                      value={form.corrAddress}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                    />
-                  </div>
+                      <textarea
+                        rows={3}
+                        name="corrAddress"
+                        value={form.corrAddress}
+                        onChange={handleChange}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                      />
+                    </div>
 
-                  {/* <div className="md:col-span-2">
+                    {/* <div className="md:col-span-2">
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Permanent Address
                     </label>
@@ -1046,19 +1099,19 @@ const AddApplicant = () => {
                       className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                     />
                   </div> */}
-                </FormSection>
-              </>
-            )}
+                  </FormSection>
+                </>
+              )}
 
-            {/* =================================================
+              {/* =================================================
                 STEP 2 ceate by me 
                 ================================================= */}
 
-            {!showPreview && step === 2 && (
-              <>
-                <ErrorBanner />
-                <FormSection title="Pension Details">
-                  {/* <div>
+              {!showPreview && step === 2 && (
+                <>
+                  <ErrorBanner />
+                  <FormSection title="Pension Details">
+                    {/* <div>
                     <SelectField
                       label="Department"
                       required
@@ -1074,60 +1127,60 @@ const AddApplicant = () => {
                     )}
                   </div> */}
 
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Department
-                    </label>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Department
+                      </label>
 
-                    <input
-                      type="text"
-                      name="department"
-                      value={form.department}
-                      readOnly
-                      className="w-full border border-gray-300 bg-gray-100 rounded px-3 py-2 text-sm text-gray-600 cursor-not-allowed"
-                    />
-                  </div>
+                      <input
+                        type="text"
+                        name="department"
+                        value={form.department}
+                        readOnly
+                        className="w-full border border-gray-300 bg-gray-100 rounded px-3 py-2 text-sm text-gray-600 cursor-not-allowed"
+                      />
+                    </div>
 
-                  <div>
-                    <SelectField
-                      label="Designation"
-                      required
-                      name="designation"
-                      value={form.designation}
-                      onChange={handleChange}
-                      options={designations}
-                    />
-                    {errors.designation && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.designation}
-                      </p>
-                    )}
-                  </div>
+                    <div>
+                      <SelectField
+                        label="Designation"
+                        required
+                        name="designation"
+                        value={form.designation}
+                        onChange={handleChange}
+                        options={designations}
+                      />
+                      {errors.designation && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.designation}
+                        </p>
+                      )}
+                    </div>
 
-                  <InputField
-                    type="date"
-                    label="Date of Joining"
-                    name="doj"
-                    value={form.doj}
-                    onChange={handleChange}
-                  />
-                  <div>
                     <InputField
                       type="date"
-                      label="Retirement Date"
-                      required
-                      name="retirementDate"
-                      value={form.retirementDate}
+                      label="Date of Joining"
+                      name="doj"
+                      value={form.doj}
                       onChange={handleChange}
                     />
-                    {errors.retirementDate && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.retirementDate}
-                      </p>
-                    )}
-                  </div>
+                    <div>
+                      <InputField
+                        type="date"
+                        label="Retirement Date"
+                        required
+                        name="retirementDate"
+                        value={form.retirementDate}
+                        onChange={handleChange}
+                      />
+                      {errors.retirementDate && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.retirementDate}
+                        </p>
+                      )}
+                    </div>
 
-                  {/* <div>
+                    {/* <div>
                     <SelectField
                       label="Employee Category"
                       required
@@ -1142,82 +1195,84 @@ const AddApplicant = () => {
                       </p>
                     )}
                   </div> */}
-                  <div>
+                    <div>
+                      <InputField
+                        label="Grade Pay"
+                        required
+                        name="gradePay"
+                        value={form.gradePay}
+                        onChange={handleChange}
+                      />
+                      {errors.gradePay && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.gradePay}
+                        </p>
+                      )}
+                    </div>
                     <InputField
-                      label="Grade Pay"
-                      required
-                      name="gradePay"
-                      value={form.gradePay}
+                      label="Last Salary"
+                      name="lastSalary"
+                      value={form.lastSalary}
                       onChange={handleChange}
                     />
-                    {errors.gradePay && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.gradePay}
-                      </p>
-                    )}
-                  </div>
-                  <InputField
-                    label="Last Salary"
-                    name="lastSalary"
-                    value={form.lastSalary}
-                    onChange={handleChange}
-                  />
-                </FormSection>
+                  </FormSection>
 
-                <FormSection icon="📂" title="Pension Category">
-                  <div>
-                    <InputField
-                      label="PFMS"
-                      name="pfms"
-                      value={form.pfms}
+                  <FormSection icon="📂" title="Pension Category">
+                    <div>
+                      <InputField
+                        label="PFMS"
+                        name="pfms"
+                        value={form.pfms}
+                        onChange={handleChange}
+                        placeholder="e.g. PFMS2024001234"
+                      />
+                      {errors.pfms && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.pfms}
+                        </p>
+                      )}
+                    </div>
+
+                    <RadioGroup
+                      label="Category Type"
+                      name="categoryType"
+                      value={form.categoryType}
                       onChange={handleChange}
-                      placeholder="e.g. PFMS2024001234"
+                      options={["Self", "Family", "Disability", "Other"]}
                     />
-                    {errors.pfms && (
-                      <p className="text-red-500 text-xs mt-1">{errors.pfms}</p>
-                    )}
-                  </div>
-
-                  <RadioGroup
-                    label="Category Type"
-                    name="categoryType"
-                    value={form.categoryType}
-                    onChange={handleChange}
-                    options={["Self", "Family", "Disability", "Other"]}
-                  />
-                  {/* <RadioGroup
+                    {/* <RadioGroup
                     label="Category %"
                     name="categoryPct"
                     value={form.categoryPct}
                     onChange={handleChange}
                     options={["100", "90", "75"]}
                   /> */}
-                  <RadioGroup
-                    label="ACP"
-                    name="acp"
-                    value={form.acp}
-                    onChange={handleChange}
-                    options={["Y", "N"]}
-                  />
-                  <RadioGroup
-                    label="Notional Increment"
-                    name="notionalIncrement"
-                    value={form.notionalIncrement}
-                    onChange={handleChange}
-                    options={["Y", "N"]}
-                  />
-                </FormSection>
-              </>
-            )}
+                    <RadioGroup
+                      label="ACP"
+                      name="acp"
+                      value={form.acp}
+                      onChange={handleChange}
+                      options={["Y", "N"]}
+                    />
+                    <RadioGroup
+                      label="Notional Increment"
+                      name="notionalIncrement"
+                      value={form.notionalIncrement}
+                      onChange={handleChange}
+                      options={["Y", "N"]}
+                    />
+                  </FormSection>
+                </>
+              )}
 
-            {/* ══════════════════════════════════════════════════
+              {/* ══════════════════════════════════════════════════
                 STEP 3 — Bank Details
             ══════════════════════════════════════════════════ */}
-            {!showPreview && step === 3 && (
-              <>
-                <ErrorBanner />
-                <FormSection icon="🏦" title="Bank Details">
-                  {/* <div>
+              {!showPreview && step === 3 && (
+                <>
+                  <ErrorBanner />
+                  <FormSection icon="🏦" title="Bank Details">
+                    {/* <div>
                     <InputField
                       label="Bank Name"
                       required
@@ -1232,187 +1287,192 @@ const AddApplicant = () => {
                     )}
                   </div> */}
 
-                  <div>
-                    <SelectField
-                      label="Bank Name"
-                      required
-                      name="bankName"
-                      value={form.bankName}
-                      onChange={handleChange}
-                      options={banks}
-                    />
+                    <div>
+                      <SelectField
+                        label="Bank Name"
+                        required
+                        name="bankName"
+                        value={form.bankName}
+                        onChange={handleChange}
+                        options={banks}
+                      />
 
-                    {errors.bankName && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.bankName}
-                      </p>
-                    )}
-                  </div>
+                      {errors.bankName && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.bankName}
+                        </p>
+                      )}
+                    </div>
 
-                  <div>
+                    <div>
+                      <InputField
+                        label="IFSC"
+                        required
+                        name="ifsc"
+                        value={form.ifsc}
+                        onChange={handleChange}
+                      />
+                      {errors.ifsc && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.ifsc}
+                        </p>
+                      )}
+                    </div>
                     <InputField
-                      label="IFSC"
-                      required
-                      name="ifsc"
-                      value={form.ifsc}
+                      label="MICR"
+                      name="micr"
+                      value={form.micr}
                       onChange={handleChange}
                     />
-                    {errors.ifsc && (
-                      <p className="text-red-500 text-xs mt-1">{errors.ifsc}</p>
-                    )}
-                  </div>
-                  <InputField
-                    label="MICR"
-                    name="micr"
-                    value={form.micr}
-                    onChange={handleChange}
-                  />
-                  <div>
-                    <InputField
-                      label="Account Number"
-                      required
-                      name="acNo"
-                      value={form.acNo}
-                      onChange={handleChange}
-                    />
-                    {errors.acNo && (
-                      <p className="text-red-500 text-xs mt-1">{errors.acNo}</p>
-                    )}
-                  </div>
-                  <div>
-                    <SelectField
-                      label="Account Type"
-                      required
-                      name="acType"
-                      value={form.acType}
-                      onChange={handleChange}
-                      options={accountTypes}
-                    />
-                    {errors.acType && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.acType}
-                      </p>
-                    )}
-                  </div>
-                </FormSection>
-              </>
-            )}
+                    <div>
+                      <InputField
+                        label="Account Number"
+                        required
+                        name="acNo"
+                        value={form.acNo}
+                        onChange={handleChange}
+                      />
+                      {errors.acNo && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.acNo}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <SelectField
+                        label="Account Type"
+                        required
+                        name="acType"
+                        value={form.acType}
+                        onChange={handleChange}
+                        options={accountTypes}
+                      />
+                      {errors.acType && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.acType}
+                        </p>
+                      )}
+                    </div>
+                  </FormSection>
+                </>
+              )}
 
-            {/* ══════════════════════════════════════════════════
+              {/* ══════════════════════════════════════════════════
                 STEP 4 — Upload Documents
             ══════════════════════════════════════════════════ */}
-            {!showPreview && step === 4 && (
-              <>
-                <ErrorBanner />
-                <FormSection icon="📎" title="Upload Documents">
-                  <div>
-                    <UploadField
-                      label="Photo"
-                      name="photo"
-                      onChange={handleChange}
-                      accept="image/*"
-                      Icon={Camera}
-                    />
-                    {form.photo && (
-                      <p className="text-green-600 text-xs mt-1">
-                        ✅ {form.photo.name}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <UploadField
-                      label="Signature"
-                      name="signature"
-                      onChange={handleChange}
-                      accept="image/*"
-                      Icon={PenTool}
-                    />
-                    {form.signature && (
-                      <p className="text-green-600 text-xs mt-1">
-                        ✅ {form.signature.name}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <UploadField
-                      label="Salary Slip"
-                      name="salarySlip"
-                      onChange={handleChange}
-                      accept="application/pdf"
-                      Icon={FileText}
-                    />
-                    {form.salarySlip && (
-                      <p className="text-green-600 text-xs mt-1">
-                        ✅ {form.salarySlip.name}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <UploadField
-                      label="Death Certificate"
-                      name="deathCertificate"
-                      onChange={handleChange}
-                      accept="application/pdf,image/*"
-                      Icon={FileBadge}
-                    />
-                    {form.deathCertificate && (
-                      <p className="text-green-600 text-xs mt-1">
-                        ✅ {form.deathCertificate.name}
-                      </p>
-                    )}
-                  </div>
-                </FormSection>
-              </>
-            )}
+              {!showPreview && step === 4 && (
+                <>
+                  <ErrorBanner />
+                  <FormSection icon="📎" title="Upload Documents">
+                    <div>
+                      <UploadField
+                        label="Photo"
+                        name="photo"
+                        onChange={handleChange}
+                        accept="image/*"
+                        Icon={Camera}
+                      />
+                      {form.photo && (
+                        <p className="text-green-600 text-xs mt-1">
+                          ✅ {form.photo.name}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <UploadField
+                        label="Signature"
+                        name="signature"
+                        onChange={handleChange}
+                        accept="image/*"
+                        Icon={PenTool}
+                      />
+                      {form.signature && (
+                        <p className="text-green-600 text-xs mt-1">
+                          ✅ {form.signature.name}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <UploadField
+                        label="Salary Slip"
+                        name="salarySlip"
+                        onChange={handleChange}
+                        accept="application/pdf"
+                        Icon={FileText}
+                      />
+                      {form.salarySlip && (
+                        <p className="text-green-600 text-xs mt-1">
+                          ✅ {form.salarySlip.name}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <UploadField
+                        label="Death Certificate"
+                        name="deathCertificate"
+                        onChange={handleChange}
+                        accept="application/pdf,image/*"
+                        Icon={FileBadge}
+                      />
+                      {form.deathCertificate && (
+                        <p className="text-green-600 text-xs mt-1">
+                          ✅ {form.deathCertificate.name}
+                        </p>
+                      )}
+                    </div>
+                  </FormSection>
+                </>
+              )}
 
-            {/* ══════════════════════════════════════════════════
+              {/* ══════════════════════════════════════════════════
                 Navigation Buttons (steps only)
             ══════════════════════════════════════════════════ */}
-            {!showPreview && (
-              <div className="flex justify-between items-center pt-5 mt-2 border-t border-gray-200">
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleReset}
-                    className="px-5 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    onClick={() => navigate("/dashboard")}
-                    className="px-5 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                  >
-                    Cancel
-                  </button>
-                </div>
-
-                <div className="flex gap-3">
-                  {step > 1 && (
+              {!showPreview && (
+                <div className="flex justify-between items-center pt-5 mt-2 border-t border-gray-200">
+                  <div className="flex gap-3">
                     <button
-                      onClick={goBack}
+                      onClick={handleReset}
                       className="px-5 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                     >
-                      ← Back
+                      Reset
                     </button>
-                  )}
-                  <button
-                    onClick={goNext}
-                    className="px-7 py-2 text-sm text-white rounded-lg font-medium transition"
-                    style={{
-                      background: "linear-gradient(135deg, #1a2a5e, #2d4a9a)",
-                    }}
-                  >
-                    {step === 4 ? "Preview Application →" : "Next →"}
-                  </button>
+                    <button
+                      onClick={() => navigate("/dashboard")}
+                      className="px-5 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  <div className="flex gap-3">
+                    {step > 1 && (
+                      <button
+                        onClick={goBack}
+                        className="px-5 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                      >
+                        ← Back
+                      </button>
+                    )}
+                    <button
+                      onClick={goNext}
+                      className="px-7 py-2 text-sm text-white rounded-lg font-medium transition"
+                      style={{
+                        background: "linear-gradient(135deg, #1a2a5e, #2d4a9a)",
+                      }}
+                    >
+                      {step === 4 ? "Preview Application →" : "Next →"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+            {/* /p-6 */}
           </div>
-          {/* /p-6 */}
+          {/* /card */}
         </div>
-        {/* /card */}
+        {/* /container */}
       </div>
-      {/* /container */}
-    </div>
+    </>
   );
 };
 

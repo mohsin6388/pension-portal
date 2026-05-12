@@ -4,10 +4,14 @@ import { API } from "../data/api";
 import Navbar from "../components/layout/Navbar";
 import ActionBar from "../components/layout/ActionBar";
 import Breadcrumb from "../components/ui/Breadcrumb";
+import Loader  from "../components/ui/Loading";
+import { Search } from "lucide-react";
 
 const StatusBadge = ({ status }) => {
   const styles = {
-    "Admin Approved": "bg-green-100 text-green-700 border border-green-300",
+    "Full Approved": "bg-green-200 text-green-700 border border-green-300",
+
+    "Admin Approved": "bg-blue-100 text-blue-700 border border-blue-300",
 
     Pending: "bg-yellow-100 text-yellow-700 border border-yellow-300",
 
@@ -75,7 +79,11 @@ const Dashboard = () => {
   const stats = {
     total: applicants.length,
 
-    active: applicants.filter((a) => a.status === "Admin Approved").length,
+    active: applicants.filter((a) => a.status === "Full Approved").length,
+
+    adminApproved: applicants.filter((a) => a.status === "Admin Approved").length,
+
+    rejected: applicants.filter((a) => a.status === "Rejected").length,
 
     stopped: applicants.filter((a) => a.status === "Stopped").length,
 
@@ -94,7 +102,10 @@ const Dashboard = () => {
 
     const matchFilter =
       filter === "All" ||
-      (filter === "Active" && a.status === "Admin Approved") ||
+      (filter === "Active" && a.status === "Full Approved") ||
+      (filter === "Admin Approved" && a.status === "Admin Approved") ||
+      (filter === "Pending" && a.status === "Pending") ||
+      (filter === "Rejected" && a.status === "Rejected") ||
       (filter === "Stopped" && a.status === "Stopped") ||
       (filter === "Closed" && a.status === "Closed");
 
@@ -108,7 +119,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen text-lg font-semibold">
-        Loading...
+        <Loader size={90} color="#1a2a5e" />
       </div>
     );
   }
@@ -134,10 +145,10 @@ const Dashboard = () => {
 
         {/* Welcome Banner */}
 
-        <div className="bg-blue-50 border border-blue-200 rounded px-4 py-2 text-sm text-blue-700 mb-4 flex items-center gap-2">
+        {/* <div className="bg-blue-50 border border-blue-200 rounded px-4 py-2 text-sm text-blue-700 mb-4 flex items-center gap-2">
           <span>ℹ</span>
           Welcome to the KMC Pensioner Portal.
-        </div>
+        </div> */}
 
         {/* Stats */}
 
@@ -185,10 +196,10 @@ const Dashboard = () => {
 
         {/* Search + Filters */}
 
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative flex-1">
+        <div className="flex items-center gap-8 mb-4 py-2">
+          <div className="relative flex-1 w-[55%]">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-              🔍
+              <Search size={16} />
             </span>
 
             <input
@@ -196,18 +207,27 @@ const Dashboard = () => {
               placeholder="Search by PPO No. or Name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 pl-9 text-sm focus:outline-none focus:border-blue-400"
+              className="w-full border border-gray-300 rounded px-3 py-3 pl-9 text-sm focus:outline-none focus:border-blue-400"
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-[45%]">
             {[
               "All",
               `Active (${stats.active})`,
-              `Stopped (${stats.stopped})`,
+              `Admin Approved (${stats.adminApproved})`,
               `Pending (${stats.pending})`,
+              `Rejected (${stats.rejected})`,
+              `Stopped (${stats.stopped})`,
             ].map((f, i) => {
-              const val = ["All", "Active", "Stopped", "Pending"][i];
+              const val = [
+                "All",
+                "Active",
+                "Admin Approved",
+                "Pending",
+                "Rejected",
+                "Stopped",
+              ][i];
 
               return (
                 <button

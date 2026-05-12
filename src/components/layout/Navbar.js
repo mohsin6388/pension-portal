@@ -179,7 +179,7 @@ const Navbar = () => {
                 </Link>
 
                 <Link
-                  to="/employee/list"
+                  to="/Dashboard"
                   className="
             block px-5 py-4
             text-blue-100
@@ -198,7 +198,7 @@ const Navbar = () => {
             <div className="relative group">
               <button
                 className={`px-4 py-3 text-lg font-medium transition-all duration-300 ${
-                  location.pathname.startsWith("/pension")
+                  location.pathname.startsWith("/dashoabrd")
                     ? "text-amber-400 border-b-2 border-amber-400"
                     : "text-blue-200 hover:text-white"
                 }`}
@@ -227,7 +227,7 @@ const Navbar = () => {
         "
               >
                 <Link
-                  to="/pension/start"
+                  to="/dashboard"
                   className="
             block px-5 py-4
             text-blue-100
@@ -242,7 +242,7 @@ const Navbar = () => {
                 </Link>
 
                 <Link
-                  to="/pension/stop"
+                  to="/dashboard"
                   className="
             block px-5 py-4
             text-blue-100
@@ -257,7 +257,7 @@ const Navbar = () => {
                 </Link>
 
                 <Link
-                  to="/pension/close"
+                  to="/dashboard"
                   className="
             block px-5 py-4
             text-blue-100
@@ -274,7 +274,7 @@ const Navbar = () => {
 
             {/* Arrea */}
             <Link
-              to="/arrea"
+              to="/dashboard"
               className={`px-4 py-3 text-lg font-medium transition-all duration-300 ${
                 location.pathname.startsWith("/arrea")
                   ? "text-amber-400 border-b-2 border-amber-400"

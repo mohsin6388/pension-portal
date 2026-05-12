@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { User, Lock, Building2, ChevronDown, RefreshCw } from "lucide-react";
+import { API } from "../data/api";
+import Loader from '../components/ui/Loading';
 
 const generateCaptcha = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -13,32 +15,175 @@ const Login = () => {
   const [captchaText, setCaptchaText] = useState(generateCaptcha());
   const [error, setError] = useState('');
   const [lang, setLang] = useState('hi');
+  const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState([
     { id: 1, name: "Finance" },
-    { id: 2, name: "HR" },
-    { id: 3, name: "Engineering" },
+    { id: 2, name: "IT Department" },
+    { id: 3, name: "Civil Department" },
   ]);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   if (!form.username || !form.password) {
+  //     setError('Please enter username and password.');
+  //     return;
+  //   }
+  //   if (form.captcha.toUpperCase() !== captchaText) {
+  //     setError('Incorrect captcha. Please try again.');
+  //     setCaptchaText(generateCaptcha());
+  //     setForm(f => ({ ...f, captcha: '' }));
+  //     return;
+  //   }
+
+  //   if(form.username === "admin" && form.password === "admin123" ){
+  //    const ok = login(form.username, form.password);
+  //    if (ok) navigate("/dashboard");
+  //    else setError("Invalid credentials."); 
+  //   }
+  // };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true)
+
     if (!form.username || !form.password) {
-      setError('Please enter username and password.');
+      setError("Please enter username and password.");
       return;
     }
+
     if (form.captcha.toUpperCase() !== captchaText) {
-      setError('Incorrect captcha. Please try again.');
+      setError("Incorrect captcha. Please try again.");
+
       setCaptchaText(generateCaptcha());
-      setForm(f => ({ ...f, captcha: '' }));
+
+      setForm((f) => ({
+        ...f,
+        captcha: "",
+      }));
+
       return;
     }
-    const ok = login(form.username, form.password);
-    if (ok) navigate('/dashboard');
-    else setError('Invalid credentials.');
+
+    try {
+      setError("");
+
+      const response = await fetch(`${API}/api/auth/login`, {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          username: form.username,
+          password: form.password,
+        }),
+      });
+
+      const result = await response.json();
+
+      console.log(result);
+
+      if (!response.ok) {
+        setError(result.message || "Login failed");
+        return;
+      }
+
+      const { success, data } = result;
+
+      if (success) {
+        localStorage.setItem("token", data.token);
+
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setLoading(false)
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      console.error(error);
+
+      setError("Server error");
+    }
   };
+
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   if (!form.username || !form.password) {
+  //     setError("Please enter username and password.");
+  //     return;
+  //   }
+
+  //   if (form.captcha.toUpperCase() !== captchaText) {
+  //     setError("Incorrect captcha. Please try again.");
+
+  //     setCaptchaText(generateCaptcha());
+
+  //     setForm((f) => ({
+  //       ...f,
+  //       captcha: "",
+  //     }));
+
+  //     return;
+  //   }
+
+  //   try {
+  //     setError("");
+
+  //     const response = await fetch(`${API}/api/auth/login`, {
+  //       method: "POST",
+
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+
+  //       body: JSON.stringify({
+  //         username: form.username,
+  //         password: form.password,
+  //       }),
+  //     });
+
+  //     const result = await response.json();
+  //     const { success, data } = result;
+
+  //     if (!response.ok) {
+  //       setError(data.message || "Login failed");
+  //       return;
+  //     }
+
+  //     // ======================================
+  //     // SAVE TOKEN
+  //     // ======================================
+
+  //     if (success) {
+  //       localStorage.setItem("token", data?.token);
+
+  //       // optional user save
+  //       localStorage.setItem("user", JSON.stringify(data?.user.role));
+
+  //       // ======================================
+  //       // LOGIN SUCCESS
+  //       // ======================================
+
+  //       setTimeout(() => {
+  //         navigate("/dashboard");
+  //       }, 1000);
+    
+  //     }
+
+      
+  //   } catch (error) {
+  //     console.error(error);
+
+  //     setError("Server error");
+  //   }
+  // };
+
+
 
   const isHindi = lang === 'hi';
 
@@ -249,6 +394,51 @@ const Login = () => {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Select Departments  */}
+
+                <div>
+                  <label
+                    className="block text-xs font-medium text-gray-600 mb-1"
+                    style={{ fontFamily: "'Noto Sans Devanagari', sans-serif" }}
+                  >
+                    {isHindi ? "विभाग चुनें" : "Select Department"}{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+
+                  <div className="relative">
+                    {/* Left Icon */}
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10">
+                      <Building2 size={18} />
+                    </span>
+
+                    {/* Dropdown */}
+                    <select
+                      name="department"
+                      value={form.department}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded px-3 py-2 pl-9 pr-10 text-sm focus:outline-none focus:border-blue-500 appearance-none bg-white"
+                      style={{
+                        fontFamily: "'Noto Sans Devanagari', sans-serif",
+                      }}
+                    >
+                      <option value="">
+                        {isHindi ? "विभाग चुनें" : "Select Department"}
+                      </option>
+
+                      {departments.map((dept) => (
+                        <option key={dept.id} value={dept.name}>
+                          {dept.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Right Arrow */}
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                      <ChevronDown size={18} />
+                    </span>
+                  </div>
+                </div>
+
                 <div>
                   <label
                     className="block text-xs font-medium text-gray-600 mb-1"
@@ -306,51 +496,6 @@ const Login = () => {
                         fontFamily: "'Noto Sans Devanagari', sans-serif",
                       }}
                     />
-                  </div>
-                </div>
-
-                {/* Select Departments  */}
-
-                <div>
-                  <label
-                    className="block text-xs font-medium text-gray-600 mb-1"
-                    style={{ fontFamily: "'Noto Sans Devanagari', sans-serif" }}
-                  >
-                    {isHindi ? "विभाग चुनें" : "Select Department"}{" "}
-                    <span className="text-red-500">*</span>
-                  </label>
-
-                  <div className="relative">
-                    {/* Left Icon */}
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10">
-                      <Building2 size={18} />
-                    </span>
-
-                    {/* Dropdown */}
-                    <select
-                      name="department"
-                      value={form.department}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded px-3 py-2 pl-9 pr-10 text-sm focus:outline-none focus:border-blue-500 appearance-none bg-white"
-                      style={{
-                        fontFamily: "'Noto Sans Devanagari', sans-serif",
-                      }}
-                    >
-                      <option value="">
-                        {isHindi ? "विभाग चुनें" : "Select Department"}
-                      </option>
-
-                      {departments.map((dept) => (
-                        <option key={dept.id} value={dept.name}>
-                          {dept.name}
-                        </option>
-                      ))}
-                    </select>
-
-                    {/* Right Arrow */}
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                      <ChevronDown size={18} />
-                    </span>
                   </div>
                 </div>
 
@@ -417,7 +562,15 @@ const Login = () => {
                     fontFamily: "'Noto Sans Devanagari', sans-serif",
                   }}
                 >
-                  {isHindi ? "साइन इन करें" : "Sign In"}
+                  {!loading ? (
+                    isHindi ? (
+                      "साइन इन करें"
+                    ) : (
+                      "Sign In"
+                    )
+                  ) : (
+                    <Loader size={20} />
+                  )}
                 </button>
               </form>
 

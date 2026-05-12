@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
 import { API } from "../data/api";
+import Loader from "../components/ui/Loading";
+import Breadcrumb from "../components/ui/Breadcrumb";
 
 const ApplicantView = () => {
   const { id } = useParams();
@@ -12,9 +14,44 @@ const ApplicantView = () => {
     fetchApplicant();
   }, []);
 
+  // const fetchApplicant = async () => {
+  //   try {
+  //     const res = await fetch(`${API}/api/pensioners/${id}`);
+
+  //     const result = await res.json();
+
+  //     if (result.success) {
+  //       setData(result.data);
+  //     }
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
+
   const fetchApplicant = async () => {
     try {
-      const res = await fetch(`${API}/api/pensioners/${id}`);
+      // =====================================
+      // GET TOKEN & USER
+      // =====================================
+
+      const token = localStorage.getItem("token");
+
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      const res = await fetch(`${API}/api/pensioners/${id}`, {
+        method: "GET",
+
+        headers: {
+          "Content-Type": "application/json",
+
+          // JWT TOKEN
+          Authorization: `Bearer ${token}`,
+
+          // OPTIONAL EXTRA HEADERS
+          "x-user-role": user?.role,
+          "x-user-id": user?.id,
+        },
+      });
 
       const result = await res.json();
 
@@ -29,7 +66,7 @@ const ApplicantView = () => {
   if (!data) {
     return (
       <div className="min-h-screen flex items-center justify-center text-lg font-semibold">
-        Loading...
+        <Loader size={90} />
       </div>
     );
   }
@@ -41,7 +78,14 @@ const ApplicantView = () => {
       <div className="max-w-7xl mx-auto p-6">
         {/* HEADER */}
 
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+        <Breadcrumb
+          items={[
+            { label: "Home", link: "/dashboard" },
+            { label: "Employee Details" },
+          ]}
+        />
+
+        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 my-6">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-[#163269]">
@@ -54,7 +98,19 @@ const ApplicantView = () => {
             </div>
 
             <div>
-              <span className="px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700 border border-yellow-300">
+              <span
+                className={`px-4 py-2 rounded-full text-sm font-medium border
+      ${
+        data.status === "Pending"
+          ? "bg-yellow-100 text-yellow-700 border-yellow-300"
+          : data.status === "Admin Approved"
+            ? "bg-blue-100 text-blue-700 border-blue-300"
+            : data.status === "Full Approved"
+              ? "bg-green-100 text-green-700 border-green-300"
+              : "bg-gray-100 text-gray-700 border-gray-300"
+      }
+    `}
+              >
                 {data.status || "Pending Approval"}
               </span>
             </div>
