@@ -140,7 +140,7 @@ const Navbar = () => {
                     : "text-blue-200 hover:text-white"
                 }`}
               >
-                Employee
+                Pensioner Registration
               </button>
 
               <div

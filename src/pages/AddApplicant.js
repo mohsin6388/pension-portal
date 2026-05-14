@@ -1,4 +1,12 @@
-import React, { useState } from "react";
+//=====================================================================================================================
+//====================================================================================================================
+//                                                  NEW CODE STARTS HERE
+//====================================================================================================================
+//=====================================================================================================================
+
+
+
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
 import ActionBar from "../components/layout/ActionBar";
@@ -31,6 +39,8 @@ import {
   castes,
   accountTypes,
   banks,
+  subDepartments,
+  payCommissions
 } from "../data/mockData";
 
 
@@ -44,7 +54,7 @@ const initialForm = (user) => ({
   relationName: "",
   // familyName: "",
   department: `${user.role}`,
-  designation: "",
+  subDepartment: "",
   aadhaar: "",
   pan: "",
   dob: "",
@@ -55,11 +65,16 @@ const initialForm = (user) => ({
   // empCategory: "",
   gradePay: "",
   lastSalary: "",
+  basicSalary: "",
+  payCommission: "",
   caste: "",
   categoryType: "Self",
   // categoryPct: "100",
-  notionalIncrement: "Y",
+  notionalIncrement: "",
   acp: "Y",
+  acp1: "", 
+  acp2: "",
+  acp3: "",
   pfms: "",
   mobile: "",
   familyMobile: "",
@@ -155,9 +170,6 @@ const AddApplicant = () => {
 
   const { user } = useAuth();
 
-  // console.log("checking ",user)
-
-
   const [form, setForm] = useState(initialForm(user));
   const [errors, setErrors] = useState({});
   const [step, setStep] = useState(1);
@@ -165,17 +177,56 @@ const AddApplicant = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [panError, setPanError] = useState("");
 
+  //================ Category POP UP ==============================
+  const [showCategoryPopup, setShowCategoryPopup] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("");
+
+  //===============================================================
+
   const [notification, setNotification] = useState({
     open: false,
     type: "",
     message: "",
   });
 
-  // ─── Initial State ────────────────────────────────────────────────────────────
+
+  console.log("==============> USER ROLE ->", form.department);
+
+  //================== Category Pop Up function ============================
+   const handleCategorySelect = (category) => {
+     setSelectedCategory(category);
+
+     setForm((prev) => ({
+       ...prev,
+       categoryType: category,
+     }));
+
+     setShowCategoryPopup(false);
+   };
+
+   //====================  END Category Pop Up function =========================
+
+
+
+   //==================== Hidden Input Function =====================================
+   const hiddenFields = {
+     Self: ["dod", "deathCertificate", "relationName", "relation"],
+
+     Family: ["employeeName"],
+
+     Disability: ["dod", "deathCertificate"],
+   };
+
+   const isFieldHidden = (fieldName) => {
+     return hiddenFields[selectedCategory]?.includes(fieldName);
+   };
+   //==================== End Hidden Input Function =====================================
+
+
 
   // ── Handle Change ────────────────────────────────────────────────────────
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    let { name, value, files } = e.target;
 
     if (name === "aadhaar") {
       if (!/^\d*$/.test(value) || value.length > 12) return;
@@ -187,25 +238,41 @@ const AddApplicant = () => {
       if (!/^\d*$/.test(value) || value.length > 6) return;
     }
 
+    // if (name === "pan") {
+    //   const upper = value.toUpperCase();
+
+    //   if (upper.length > 10) return;
+
+    //   setForm((p) => ({
+    //     ...p,
+    //     [name]: upper,
+    //   }));
+
+    //   // Realtime PAN validation
+    //   if (upper.length === 10 && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(upper)) {
+    //     setPanError("Invalid PAN format");
+    //   } else {
+    //     setPanError("");
+    //   }
+
+    //   return;
+    // }
+
     if (name === "pan") {
       const upper = value.toUpperCase();
 
       if (upper.length > 10) return;
 
-      setForm((p) => ({
-        ...p,
-        [name]: upper,
-      }));
+      value = upper;
 
-      // Realtime PAN validation
+      // PAN format validation
       if (upper.length === 10 && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(upper)) {
         setPanError("Invalid PAN format");
       } else {
         setPanError("");
       }
-
-      return;
     }
+
 
     if (name === "ifsc") {
       const upper = value.toUpperCase();
@@ -261,9 +328,42 @@ const AddApplicant = () => {
     const errs = {};
 
     if (s === 1) {
-      ["employeeId", "dob", "gender", "mobile"].forEach((f) => {
+      [
+        "employeeName",
+        "aadhaar",
+        "pan",
+        "dob",
+        "gender",
+        "caste",
+        "mobile",
+        "permAddress",
+        "familyMobile",
+        "pinCode",
+        "aadhaar",
+        "aadhaar",
+      ].forEach((f) => {
         if (!form[f]) errs[f] = "Required";
       });
+
+      if(selectedCategory === "Self"){
+        if (!form["employeeId"]) errs["employeeId"] = "Required";
+      }
+
+      if(selectedCategory === "Self"){
+        if (!form["employeeName"]) errs["employeeName"] = "Required";
+      }
+
+      if (selectedCategory !== "Self") {
+        if (!form["relation"]) errs["relation"] = "Required";
+      }
+
+      if (selectedCategory !== "Self") {
+        if (!form["relationName"]) errs["relationName"] = "Required";
+      }
+
+      if (selectedCategory !== "Self") {
+        if (!form["dod"]) errs["dod"] = "Required";
+      }
 
       // Aadhaar Validation
       if (form.aadhaar && !/^\d{12}$/.test(form.aadhaar)) {
@@ -271,9 +371,9 @@ const AddApplicant = () => {
       }
 
       // PAN Validation
-      // if (form.pan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(form.pan)) {
-      //   errs.pan = "Invalid PAN format";
-      // }
+      if (form.pan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(form.pan)) {
+        errs.pan = "Invalid PAN format";
+      }
 
       // Mobile Validation
       if (form.mobile && !/^\d{10}$/.test(form.mobile)) {
@@ -292,21 +392,35 @@ const AddApplicant = () => {
     }
 
     if (s === 2) {
-      ["designation", "retirementDate", "pfms", "gradePay"].forEach((f) => {
+      [
+        "subDepartment",
+        "doj",
+        "retirementDate",
+        "basicSalary",
+        "designation",
+        "retirementDate",
+        "gradePay",
+        "basicSalary",
+        "acp",
+        "acp1",
+        "acp2",
+        "acp3",
+        "notionalIncrement",
+      ].forEach((f) => {
         if (!form[f]) errs[f] = "Required";
       });
 
-      // PFMS Validation
-
-      // if (form.pfms && !/^[A-Z0-9]{6,25}$/.test(form.pfms)) {
-      //   errs.pfms = "Invalid PFMS ID";
-      // }
     }
 
     if (s === 3) {
-      ["bankName", "ifsc", "acNo", "acType"].forEach((f) => {
+      ["bankName", "ifsc", "acNo", "acType", "pfms"].forEach((f) => {
         if (!form[f]) errs[f] = "Required";
       });
+
+      //PFMS Validation
+      if (form.pfms && !/^[A-Z0-9]{6,25}$/.test(form.pfms)) {
+        errs.pfms = "Invalid PFMS ID";
+      }
 
       // IFSC Validation
       if (form.ifsc && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(form.ifsc)) {
@@ -363,13 +477,6 @@ const AddApplicant = () => {
     }
   };
 
-  // const handleReset = () => {
-  //   setForm(initialForm);
-  //   setErrors({});
-  //   setStep(1);
-  //   setShowPreview(false);
-  // };
-
   const handleReset = () => {
     let fieldsToReset = [];
 
@@ -399,21 +506,26 @@ const AddApplicant = () => {
     else if (step === 2) {
       fieldsToReset = [
         "department",
+        "subDepartment", 
         "designation",
         "doj",
         "retirementDate",
         "gradePay",
         "lastSalary",
-        "pfms",
+        "basicSalary",
+        "payCommission",
         "categoryType",
         "acp",
+        "acp1",
+        "acp2",
+        "acp3",
         "notionalIncrement",
       ];
     }
 
     // Step 3 → Bank Details
     else if (step === 3) {
-      fieldsToReset = ["bankName", "ifsc", "micr", "acNo", "acType"];
+      fieldsToReset = ["bankName", "ifsc", "micr", "acNo", "acType", "pfms"];
     }
 
     // Step 4 → Documents
@@ -447,6 +559,8 @@ const AddApplicant = () => {
 
       const user = JSON.parse(localStorage.getItem("user"));
 
+      console.log("Changement completed on Frontend => ", fd)
+
       const res = await fetch(`${API}/api/pensioners`, {
         method: "POST",
         headers: {
@@ -458,7 +572,7 @@ const AddApplicant = () => {
       });
       const data = await res.json();
       const { message, success } = data;
-      // if (!res.ok) throw new Error(data.message || "Server Error");
+      
 
       if (success) {
         setNotification({
@@ -629,7 +743,7 @@ const AddApplicant = () => {
                             </span>
 
                             <span className="font-medium text-gray-800 break-words">
-                              {val || "—"}
+                              {val || "NA"}
                             </span>
                           </div>
                         ))}
@@ -648,11 +762,14 @@ const AddApplicant = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                         {[
                           ["Department", form.department],
+                          ["Sub Department", form.subDepartment],
                           ["Designation", form.designation],
                           ["Retirement Date", form.retirementDate],
                           // ["Employee Category", form.empCategory],
                           ["Grade Pay", form.gradePay],
                           ["Last Salary", form.lastSalary],
+                          ["Basic Salary", form.basicSalary],
+                          ["Pay Commission", form.payCommission],
                         ].map(([label, val]) => (
                           <div
                             key={label}
@@ -663,7 +780,7 @@ const AddApplicant = () => {
                             </span>
 
                             <span className="font-medium text-gray-800">
-                              {val || "—"}
+                              {val || "NA"}
                             </span>
                           </div>
                         ))}
@@ -685,7 +802,6 @@ const AddApplicant = () => {
                           // ["Category %", form.categoryPct],
                           ["ACP", form.acp],
                           ["Notional Increment", form.notionalIncrement],
-                          ["PFMS", form.pfms],
                         ].map(([label, val]) => (
                           <div
                             key={label}
@@ -696,7 +812,7 @@ const AddApplicant = () => {
                             </span>
 
                             <span className="font-medium text-gray-800">
-                              {val || "—"}
+                              {val || "NA"}
                             </span>
                           </div>
                         ))}
@@ -719,6 +835,7 @@ const AddApplicant = () => {
                           ["MICR", form.micr],
                           ["Account Number", form.acNo],
                           ["Account Type", form.acType],
+                          ["PFMS", form.pfms],
                         ].map(([label, val]) => (
                           <div
                             key={label}
@@ -829,8 +946,12 @@ const AddApplicant = () => {
                   <FormSection title="Personal Details">
                     <div>
                       <InputField
-                        label="Employee ID"
-                        required
+                        label={
+                          selectedCategory == "Self"
+                            ? "Employee ID"
+                            : "Pensioner Department Employee ID"
+                        }
+                        required={selectedCategory == "Self"}
                         name="employeeId"
                         value={form.employeeId}
                         onChange={handleChange}
@@ -841,6 +962,7 @@ const AddApplicant = () => {
                         </p>
                       )}
                     </div>
+
                     <InputField
                       label="PPO No."
                       name="ppoNo"
@@ -848,46 +970,60 @@ const AddApplicant = () => {
                       onChange={handleChange}
                     />
 
-                    <InputField
-                      label="Employee Name"
-                      name="employeeName"
-                      value={form.employeeName}
-                      onChange={handleChange}
-                    />
-
                     <div>
-                      <SelectField
-                        label="Relation"
+                      <InputField
+                        label="Employee Name"
                         required
-                        name="relation"
-                        value={form.relation}
+                        name="employeeName"
+                        value={form.employeeName}
                         onChange={handleChange}
-                        options={familyMember}
                       />
-                      {errors.familyMember && (
+                      {errors.employeeName && (
                         <p className="text-red-500 text-xs mt-1">
-                          {errors.familyMember}
+                          {errors.employeeName}
                         </p>
                       )}
                     </div>
 
-                    {/* <InputField
-                    label={form.dependentName}
-                    name="familyName"
-                    value={form.familyName}
-                    onChange={handleChange}
-                  /> */}
+                    {!isFieldHidden("relation") && (
+                      <div>
+                        <SelectField
+                          label="Relation"
+                          required
+                          name="relation"
+                          value={form.relation}
+                          onChange={handleChange}
+                          options={familyMember}
+                        />
+                        {errors.relation && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.relation}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
-                    <InputField
-                      label={"Name of Spouse/Father/Mother/Self"}
-                      name="relationName"
-                      value={form.relationName}
-                      onChange={handleChange}
-                    />
+                    {!isFieldHidden("relationName") && (
+                      <div>
+                        <InputField
+                          label={"Name of Spouse/Father/Mother"}
+                          required
+                          name="relationName"
+                          value={form.relationName}
+                          onChange={handleChange}
+                        />
+                        {errors.relationName && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.relationName}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     <div>
                       <InputField
                         label="Aadhaar"
+                        required
                         name="aadhaar"
                         value={form.aadhaar}
                         onChange={handleChange}
@@ -902,19 +1038,18 @@ const AddApplicant = () => {
                     <div>
                       <InputField
                         label="PAN"
+                        required
                         name="pan"
                         value={form.pan}
                         onChange={handleChange}
                         placeholder="ABCDE1234F"
                       />
 
-                      {panError && (
-                        <p className="text-red-500 text-xs mt-1">{panError}</p>
+                      {errors.pan && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.pan}
+                        </p>
                       )}
-
-                      {/* {errors.pan && (
-                      <p className="text-red-500 text-xs mt-1">{errors.pan}</p>
-                    )} */}
                     </div>
 
                     <div>
@@ -933,13 +1068,24 @@ const AddApplicant = () => {
                       )}
                     </div>
 
-                    <InputField
-                      type="date"
-                      label="Date of Death"
-                      name="dod"
-                      value={form.dod}
-                      onChange={handleChange}
-                    />
+                    {!isFieldHidden("dod") && (
+                      <div>
+                        <InputField
+                          type="date"
+                          label="Date of Death"
+                          required
+                          name="dod"
+                          value={form.dod}
+                          onChange={handleChange}
+                        />
+
+                        {errors.dob && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.dob}
+                          </p>
+                        )}
+                      </div>
+                    )}
                     <div>
                       <SelectField
                         label="Gender"
@@ -956,19 +1102,22 @@ const AddApplicant = () => {
                       )}
                     </div>
 
-                    <SelectField
-                      label="Caste"
-                      name="caste"
-                      value={form.caste}
-                      onChange={handleChange}
-                      options={castes}
-                    />
-                    {/* <InputField
-                    label="Dependent Name"
-                    name="dependentName"
-                    value={form.dependentName}
-                    onChange={handleChange}
-                  /> */}
+                    <div>
+                      <SelectField
+                        label="Caste"
+                        required
+                        name="caste"
+                        value={form.caste}
+                        onChange={handleChange}
+                        options={castes}
+                      />
+
+                      {errors.gender && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.gender}
+                        </p>
+                      )}
+                    </div>
                   </FormSection>
 
                   <FormSection title="Contact & Address">
@@ -989,6 +1138,7 @@ const AddApplicant = () => {
                     <div>
                       <InputField
                         label="Family Mobile"
+                        required
                         name="familyMobile"
                         value={form.familyMobile}
                         onChange={handleChange}
@@ -1002,6 +1152,7 @@ const AddApplicant = () => {
                     <div>
                       <InputField
                         label="PIN Code"
+                        required
                         name="pinCode"
                         value={form.pinCode}
                         onChange={handleChange}
@@ -1015,7 +1166,8 @@ const AddApplicant = () => {
 
                     <div className="md:col-span-2">
                       <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Permanent Address
+                        Permanent Address{" "}
+                        <span className="text-red-500">*</span>
                       </label>
 
                       <textarea
@@ -1024,7 +1176,13 @@ const AddApplicant = () => {
                         value={form.permAddress}
                         onChange={handleChange}
                         className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                        required
                       />
+                      {errors.permAddress && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.permAddress}
+                        </p>
+                      )}
                     </div>
 
                     {/* Checkbox */}
@@ -1068,31 +1226,6 @@ const AddApplicant = () => {
                         className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                       />
                     </div>
-
-                    {/* <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Permanent Address
-                    </label>
-                    <textarea
-                      rows={3}
-                      name="permAddress"
-                      value={form.permAddress}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Correspondence Address
-                    </label>
-                    <textarea
-                      rows={3}
-                      name="corrAddress"
-                      value={form.corrAddress}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                    />
-                  </div> */}
                   </FormSection>
                 </>
               )}
@@ -1105,22 +1238,6 @@ const AddApplicant = () => {
                 <>
                   <ErrorBanner />
                   <FormSection title="Pension Details">
-                    {/* <div>
-                    <SelectField
-                      label="Department"
-                      required
-                      name="department"
-                      value={form.department}
-                      onChange={handleChange}
-                      options={departments}
-                    />
-                    {errors.department && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.department}
-                      </p>
-                    )}
-                  </div> */}
-
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">
                         Department
@@ -1133,6 +1250,22 @@ const AddApplicant = () => {
                         readOnly
                         className="w-full border border-gray-300 bg-gray-100 rounded px-3 py-2 text-sm text-gray-600 cursor-not-allowed"
                       />
+                    </div>
+
+                    <div>
+                      <SelectField
+                        label="Sub Department"
+                        required
+                        name="subDepartment"
+                        value={form.subDepartment}
+                        onChange={handleChange}
+                        options={subDepartments}
+                      />
+                      {errors.subDepartment && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.subDepartment}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -1151,44 +1284,35 @@ const AddApplicant = () => {
                       )}
                     </div>
 
-                    <InputField
-                      type="date"
-                      label="Date of Joining"
-                      name="doj"
-                      value={form.doj}
-                      onChange={handleChange}
-                    />
-                    <div>
+                    {!isFieldHidden("doj") && (
                       <InputField
                         type="date"
-                        label="Retirement Date"
+                        label="Date of Joining"
                         required
-                        name="retirementDate"
-                        value={form.retirementDate}
+                        name="doj"
+                        value={form.doj}
                         onChange={handleChange}
                       />
-                      {errors.retirementDate && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.retirementDate}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* <div>
-                    <SelectField
-                      label="Employee Category"
-                      required
-                      name="empCategory"
-                      value={form.empCategory}
-                      onChange={handleChange}
-                      options={categories}
-                    />
-                    {errors.empCategory && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.empCategory}
-                      </p>
                     )}
-                  </div> */}
+
+                    {!isFieldHidden("retirementDate") && (
+                      <div>
+                        <InputField
+                          type="date"
+                          label="Retirement Date"
+                          required
+                          name="retirementDate"
+                          value={form.retirementDate}
+                          onChange={handleChange}
+                        />
+                        {errors.retirementDate && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.retirementDate}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     <div>
                       <InputField
                         label="Grade Pay"
@@ -1203,58 +1327,124 @@ const AddApplicant = () => {
                         </p>
                       )}
                     </div>
+
                     <InputField
-                      label="Last Salary"
-                      name="lastSalary"
-                      value={form.lastSalary}
+                      label="Basic Salary"
+                      required
+                      name="basicSalary"
+                      value={form.basicSalary}
                       onChange={handleChange}
                     />
-                  </FormSection>
 
-                  <FormSection icon="📂" title="Pension Category">
-                    <div>
+                   
                       <InputField
-                        label="PFMS"
-                        name="pfms"
-                        value={form.pfms}
+                        label="Last Salary"
+                        required
+                        name="lastSalary"
+                        value={form.lastSalary}
                         onChange={handleChange}
-                        placeholder="e.g. PFMS2024001234"
                       />
-                      {errors.pfms && (
+                  
+
+                    <div>
+                      <SelectField
+                        label="Pay Commission"
+                        required
+                        name="payCommission"
+                        value={form.payCommission}
+                        onChange={handleChange}
+                        options={payCommissions}
+                      />
+                      {errors.payCommission && (
                         <p className="text-red-500 text-xs mt-1">
-                          {errors.pfms}
+                          {errors.payCommission}
                         </p>
                       )}
                     </div>
+                  </FormSection>
 
-                    <RadioGroup
-                      label="Category Type"
-                      name="categoryType"
-                      value={form.categoryType}
-                      onChange={handleChange}
-                      options={["Self", "Family", "Disability", "Other"]}
-                    />
-                    {/* <RadioGroup
-                    label="Category %"
-                    name="categoryPct"
-                    value={form.categoryPct}
-                    onChange={handleChange}
-                    options={["100", "90", "75"]}
-                  /> */}
-                    <RadioGroup
-                      label="ACP"
-                      name="acp"
-                      value={form.acp}
-                      onChange={handleChange}
-                      options={["Y", "N"]}
-                    />
-                    <RadioGroup
-                      label="Notional Increment"
-                      name="notionalIncrement"
-                      value={form.notionalIncrement}
-                      onChange={handleChange}
-                      options={["Y", "N"]}
-                    />
+                  <FormSection icon="📂" title="Pension Category">
+                    <div className="flex flex-col gap-7">
+                      <div>
+                        <RadioGroup
+                          label="ACP Status"
+                          required
+                          name="acp"
+                          value={form.acp}
+                          onChange={handleChange}
+                          options={["Paid", "Not Paid"]}
+                        />
+                        {errors.acp && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.acp}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <RadioGroup
+                          label="ACP I"
+                          required
+                          name="acp1"
+                          value={form.acp1}
+                          onChange={handleChange}
+                          options={["Yes", "No", "Not Eligible"]}
+                        />
+                        {errors.acp1 && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.acp1}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <RadioGroup
+                          label="ACP II"
+                          required
+                          name="acp2"
+                          value={form.acp2}
+                          onChange={handleChange}
+                          options={["Yes", "No", "Not Eligible"]}
+                        />
+                        {errors.acp2 && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.acp2}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <RadioGroup
+                          label="ACP III"
+                          required
+                          name="acp3"
+                          value={form.acp3}
+                          onChange={handleChange}
+                          options={["Yes", "No", "Not Eligible"]}
+                        />
+                        {errors.acp3 && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.acp3}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <RadioGroup
+                        label="Notional Increment"
+                        required
+                        name="notionalIncrement"
+                        value={form.notionalIncrement}
+                        onChange={handleChange}
+                        options={["Yes-Eligible", "Not Eligible"]}
+                      />
+                      {errors.notionalIncrement && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.notionalIncrement}
+                        </p>
+                      )}
+                    </div>
                   </FormSection>
                 </>
               )}
@@ -1266,21 +1456,6 @@ const AddApplicant = () => {
                 <>
                   <ErrorBanner />
                   <FormSection icon="🏦" title="Bank Details">
-                    {/* <div>
-                    <InputField
-                      label="Bank Name"
-                      required
-                      name="bankName"
-                      value={form.bankName}
-                      onChange={handleChange}
-                    />
-                    {errors.bankName && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.bankName}
-                      </p>
-                    )}
-                  </div> */}
-
                     <div>
                       <SelectField
                         label="Bank Name"
@@ -1312,12 +1487,14 @@ const AddApplicant = () => {
                         </p>
                       )}
                     </div>
+
                     <InputField
                       label="MICR"
                       name="micr"
                       value={form.micr}
                       onChange={handleChange}
                     />
+
                     <div>
                       <InputField
                         label="Account Number"
@@ -1332,6 +1509,7 @@ const AddApplicant = () => {
                         </p>
                       )}
                     </div>
+
                     <div>
                       <SelectField
                         label="Account Type"
@@ -1344,6 +1522,21 @@ const AddApplicant = () => {
                       {errors.acType && (
                         <p className="text-red-500 text-xs mt-1">
                           {errors.acType}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <InputField
+                        label="PFMS"
+                        name="pfms"
+                        value={form.pfms}
+                        onChange={handleChange}
+                        placeholder="e.g. PFMS2024001234"
+                      />
+                      {errors.pfms && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.pfms}
                         </p>
                       )}
                     </div>
@@ -1400,20 +1593,23 @@ const AddApplicant = () => {
                         </p>
                       )}
                     </div>
-                    <div>
-                      <UploadField
-                        label="Death Certificate"
-                        name="deathCertificate"
-                        onChange={handleChange}
-                        accept="application/pdf,image/*"
-                        Icon={FileBadge}
-                      />
-                      {form.deathCertificate && (
-                        <p className="text-green-600 text-xs mt-1">
-                          ✅ {form.deathCertificate.name}
-                        </p>
-                      )}
-                    </div>
+
+                    {!isFieldHidden("deathCertificate") && (
+                      <div>
+                        <UploadField
+                          label="Death Certificate"
+                          name="deathCertificate"
+                          onChange={handleChange}
+                          accept="application/pdf,image/*"
+                          Icon={FileBadge}
+                        />
+                        {form.deathCertificate && (
+                          <p className="text-green-600 text-xs mt-1">
+                            ✅ {form.deathCertificate.name}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </FormSection>
                 </>
               )}
@@ -1464,10 +1660,56 @@ const AddApplicant = () => {
           </div>
           {/* /card */}
         </div>
-        {/* /container */}
       </div>
+
+      {showCategoryPopup && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 w-[400px] shadow-2xl border border-gray-200">
+            <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">
+              Select Pension Category
+            </h2>
+
+            <p className="text-sm text-gray-500 text-center mb-6">
+              Please choose pension category
+            </p>
+
+            <div className="space-y-4">
+              <button
+                onClick={() => handleCategorySelect("Self")}
+                className="w-full py-3 bg-gray-100 hover:bg-blue-600 hover:text-white text-gray-700 rounded-xl transition-all duration-200 font-medium border border-gray-200"
+              >
+                Self Pension
+              </button>
+
+              <button
+                onClick={() => handleCategorySelect("Family")}
+                className="w-full py-3 bg-blue-50 hover:bg-blue-600 hover:text-white text-gray-700 rounded-xl transition-all duration-200 font-medium border border-blue-200"
+              >
+                Family Pension
+              </button>
+
+              <button
+                onClick={() => handleCategorySelect("Dependent")}
+                className="w-full py-3 bg-blue-50 hover:bg-blue-600 hover:text-white text-gray-700 rounded-xl transition-all duration-200 font-medium border border-blue-200"
+              >
+                Dependent Pension
+              </button>
+
+              <button
+                onClick={() => handleCategorySelect("Disability")}
+                className="w-full py-3 bg-blue-50 hover:bg-blue-600 hover:text-white text-gray-700 rounded-xl transition-all duration-200 font-medium border border-blue-200"
+              >
+                Disability Pension
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };;
 
 export default AddApplicant;
+
+
+

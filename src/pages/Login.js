@@ -28,25 +28,6 @@ const Login = () => {
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   if (!form.username || !form.password) {
-  //     setError('Please enter username and password.');
-  //     return;
-  //   }
-  //   if (form.captcha.toUpperCase() !== captchaText) {
-  //     setError('Incorrect captcha. Please try again.');
-  //     setCaptchaText(generateCaptcha());
-  //     setForm(f => ({ ...f, captcha: '' }));
-  //     return;
-  //   }
-
-  //   if(form.username === "admin" && form.password === "admin123" ){
-  //    const ok = login(form.username, form.password);
-  //    if (ok) navigate("/dashboard");
-  //    else setError("Invalid credentials."); 
-  //   }
-  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -377,7 +358,7 @@ const Login = () => {
                   fontFamily: "'Noto Sans Devanagari', sans-serif",
                 }}
               >
-                {isHindi ? "ऑपरेटर लॉगिन" : "Operator Login"}
+                {isHindi ? "विभाग लॉगिन" : "Department Login"}
               </h3>
               <p
                 className="text-center text-gray-500 text-xs mb-5"
@@ -571,7 +552,7 @@ const Login = () => {
                   />
                 </div>
 
-                <div className="text-right">
+                {/* <div className="text-right">
                   <button
                     type="button"
                     className="text-xs text-blue-600 hover:underline"
@@ -579,7 +560,7 @@ const Login = () => {
                   >
                     {isHindi ? "पासवर्ड भूल गए?" : "Forgot Password?"}
                   </button>
-                </div>
+                </div> */}
 
                 <button
                   type="submit"

@@ -37,7 +37,7 @@ export const SelectField = ({ label, required, options, value, onChange, name, c
 
 export const RadioGroup = ({ label, required, options, value, onChange, name }) => (
   <div>
-    <label className="block text-xs font-medium text-gray-600 mb-2">
+    <label className="block text-base font-medium text-gray-600 mb-2">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <div className="flex gap-3 flex-wrap">

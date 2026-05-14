@@ -95,8 +95,22 @@ export const departments = [
   // "Sanitation",
 ];
 
+export const subDepartments = [
+  "sub-department-1",
+  "sub-department-2",
+  "sub-department-3",
+];
+
+export const payCommissions = [
+  "5th Pay Commission",
+  "6th Pay Commission",
+  "7th Pay Commission",
+  "8th Pay Commission",
+  "9th Pay Commission",
+  "10th Pay Commission",
+];
+
 export const familyMember = [
-  "Self",
   "Father",
   "Mother",
   "Spouse",
