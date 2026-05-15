@@ -1529,6 +1529,7 @@ const AddApplicant = () => {
                     <div>
                       <InputField
                         label="PFMS"
+                        required
                         name="pfms"
                         value={form.pfms}
                         onChange={handleChange}

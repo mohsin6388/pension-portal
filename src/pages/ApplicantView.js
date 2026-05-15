@@ -128,10 +128,6 @@ const ApplicantView = () => {
 
           <Field label="Old PPO Number" value={data.old_ppo} />
 
-          <Field label="Department" value={data.department} />
-
-          <Field label="Designation" value={data.designation} />
-
           <Field label="Gender" value={data.gender} />
 
           <Field label="Aadhaar Number" value={data.aadhaar_no} />
@@ -150,39 +146,47 @@ const ApplicantView = () => {
 
           <Field label="Date of Birth" value={formatDate(data.date_of_birth)} />
 
-          <Field
-            label="Date of Joining"
-            value={formatDate(data.date_of_joining)}
-          />
-
-          <Field
-            label="Retirement Date"
-            value={formatDate(data.retirement_date)}
-          />
-
           <Field label="Date of Death" value={formatDate(data.date_of_death)} />
 
-          <Field label="Grade Pay" value={data.grade_pay} />
+          {/* PENSION CATEGORY */}
 
-          <Field
-            label="Last Salary Drawn"
-            value={`₹ ${Number(data.last_salary_drawn || 0).toLocaleString()}`}
-          />
-        </Section>
+          <Section title="Pension Category">
+            <Field label="Department" value={data.department} />
 
-        {/* PENSION CATEGORY */}
+            <Field label="Sub Department" value={data.sub_department} />
 
-        <Section title="Pension Category">
+            <Field label="Designation" value={data.designation} />
+
+            <Field
+              label="Date of Joining"
+              value={formatDate(data.date_of_joining)}
+            />
+
+            <Field
+              label="Retirement Date"
+              value={formatDate(data.retirement_date)}
+            />
+
+            <Field label="Grade Pay" value={data.grade_pay} />
+
+            <Field
+              label="Last Salary Drawn"
+              value={`₹ ${Number(data.last_salary_drawn || 0).toLocaleString()}`}
+            />
+          </Section>
+
+          <Field label="Basic Salary" value={data.basic_salary} />
+
+          <Field label="Pay Commission" value={data.pay_commission} />
           <Field label="Category Type" value={data.category_type} />
 
-          <Field label="ACP" value={data.acp ? "Yes" : "No"} />
+          <Field label="ACP" value={data.acp} />
 
-          <Field
-            label="Notional Increment"
-            value={data.notional_increment ? "Yes" : "No"}
-          />
+          <Field label="ACP I" value={data.acp1} />
+          <Field label="ACP II" value={data.acp2} />
+          <Field label="ACP III" value={data.acp3} />
 
-          <Field label="PFMS" value={data.pfms} />
+          <Field label="Notional Increment" value={data.notional_increment} />
         </Section>
 
         {/* BANK DETAILS */}
@@ -197,6 +201,8 @@ const ApplicantView = () => {
           <Field label="Bank Account No" value={data.bank_ac_no} />
 
           <Field label="Account Type" value={data.ac_type} />
+
+          <Field label="PFMS" value={data.pfms} />
         </Section>
 
         {/* ADDRESS DETAILS */}
@@ -249,7 +255,7 @@ const Field = ({ label, value }) => {
       <label className="text-sm text-gray-500">{label}</label>
 
       <div className="mt-1 border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 font-medium min-h-[50px] flex items-center">
-        {value || "-"}
+        {value? <span>{value}</span> : <span className="text-gray-500">NA</span> }
       </div>
     </div>
   );
@@ -271,7 +277,7 @@ const DocumentField = ({ label, file }) => {
             View Document
           </a>
         ) : (
-          "-"
+          <span className="text-gray-400">No Document</span>
         )}
       </div>
     </div>

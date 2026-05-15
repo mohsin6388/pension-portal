@@ -19,9 +19,9 @@ const Login = () => {
   const [departments, setDepartments] = useState([
     { id: 1, name: "Accounts" },
     { id: 2, name: "Engineering" },
-    { id: 4, name: "Tax" },
+    { id: 3, name: "Tax" },
+    { id: 4, name: "Lighting" },
     { id: 5, name: "Care Taker" },
-    { id: 6, name: "Lighting" },
   ]);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -86,6 +86,7 @@ const Login = () => {
       if (success) {
         localStorage.setItem("token", data.token);
         login(data.user);
+        console.log("Check ID ============>",data.user.id)
 
         setLoading(false)
         navigate("/dashboard");
